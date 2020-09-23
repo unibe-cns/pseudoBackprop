@@ -1,8 +1,5 @@
 # pseudoBackprop
 Project to compare vanilla backprop, feedback alignment and pseudo backpropagation on a simple example
-=======
-# psedoBackprop
-Project to compare vanilla backprop, feedback alignment and pseudo backpropagation on a simple example.
 
 ## Maintenance manual
 
@@ -37,4 +34,5 @@ pycodestyle tests/import_test.py
 ```
 and for pylint:
 ```bash
+pylint tests/import_test.py
 ```
