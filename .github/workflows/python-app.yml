@@ -37,4 +37,4 @@ jobs:
         nosetests
     - name: Check syntax with pycodestyle
       run: |
-        pycodestyle
+        pycodestyle *.py pseudoBackprop
