@@ -1,6 +1,9 @@
 # pseudoBackprop
 Project to compare vanilla backprop, feedback alignment and pseudo backpropagation on a simple example
 
+![Python test](https://github.com/afkungl/pseudoBackprop/workflows/Python%20tests/badge.svg)
+![Python codestyle](https://github.com/afkungl/pseudoBackprop/workflows/Python%20codestyle/badge.svg)
+
 ## Maintenance manual
 
 Notes on how to build and contribute to the code
