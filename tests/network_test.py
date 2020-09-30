@@ -2,7 +2,7 @@
     Test the setup and evaluation of the networks
 """
 import torch
-from pseudoBackprop.network import FullyConnectedNetwork
+from pseudo_backprop.network import FullyConnectedNetwork
 
 
 class TestClassBackprop:

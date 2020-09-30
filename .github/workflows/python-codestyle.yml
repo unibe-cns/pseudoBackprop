@@ -29,9 +29,9 @@ jobs:
     - name: Lint with pylint
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        pylint --errors-only pseudoBackprop/ *.py
+        pylint --errors-only pseudo_backprop/ *.py
         # exit-zero treats all errors as warnings
-        pylint pseudoBackprop/ *.py
+        pylint pseudo_backprop/ *.py
     - name: Check syntax with pycodestyle
       run: |
-        pycodestyle *.py pseudoBackprop
+        pycodestyle *.py pseudo_backprop

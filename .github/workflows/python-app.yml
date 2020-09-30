@@ -29,7 +29,7 @@ jobs:
     - name: Lint with pylint
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        pylint --errors-only pseudoBackprop/ *.py
+        pylint --errors-only pseudo_backprop/ *.py
     - name: Test with nosetest
       run: |
         nosetests
