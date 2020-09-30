@@ -62,6 +62,9 @@ class FeedbackAlignmentLinearity(torch.autograd.Function):
 
 
 class FeedbackAlginementModule(nn.Module):
+    """
+        Define a module of synapses for the feedback alignement synapses
+    """
 
     def __init__(self, input_size, output_size, bias=True):
         """
@@ -104,6 +107,9 @@ class FeedbackAlginementModule(nn.Module):
         torch.nn.init.normal_(self.bias)
 
     def forward(self, input_tensor):
+        """
+            Method to calculate the forward processing through the synapses
+        """
         # the forward calcualtion of the module
         return FeedbackAlignmentLinearity.apply(input_tensor,
                                                 self.w_matrix,

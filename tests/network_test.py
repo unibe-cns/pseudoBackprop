@@ -5,7 +5,6 @@ import torch
 from pseudoBackprop.network import FullyConnectedNetwork
 
 
-
 class TestClassBackprop:
     """
         test the setup of a backprop network with one forward and
