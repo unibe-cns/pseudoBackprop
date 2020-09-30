@@ -2,6 +2,7 @@
     Defining the class to contain the feedforward neural network
 """
 import torch
+from pseudoBackprop.layers import FeedbackAlginementModule
 
 
 class FullyConnectedNetwork(torch.nn.Module):
@@ -26,8 +27,9 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.layers = layers
 
         # create the synapse
-        self.synapses = [synapseModule(self.layers[index], self.layers[index +
-                         1]) for index in range(self.num_layers - 1)]
+        self.synapses = [synapseModule(self.layers[index],
+                         self.layers[index + 1]) for index in
+                         range(self.num_layers - 1)]
 
         # make the operations
         self.operations = []
@@ -42,6 +44,13 @@ class FullyConnectedNetwork(torch.nn.Module):
             Delegating constructor for the backprop case
         """
         return cls(layers, torch.nn.Linear)
+
+    @classmethod
+    def feedback_alignement(cls, layers):
+        """
+            Delegating constructor for the backprop case
+        """
+        return cls(layers, FeedbackAlginementModule)
 
     def forward(self, inputs):
         """
