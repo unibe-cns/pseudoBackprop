@@ -1,16 +1,18 @@
 #!/usr/bin/env python
+"""
+  Setup for pip install using setuptools
+"""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
-version = "0.1"
 
 setup(name='pseudoBackprop',
-      version=version,
+      version="0.1",
       description='',
       author='Akos Kungl',
       author_email='afkungl@kip.uni-heidelberg.de',
       url='https://github.com/afkungl/psedoBackprop',
-      packages=["pseudoBackprop"],
+      packages=["pseudo_backprop"],
       package_dir={
           "pseudoBackprop": "pseudoBackprop",
           },

@@ -2,7 +2,7 @@
     Defining the class to contain the feedforward neural network
 """
 import torch
-from pseudoBackprop.layers import FeedbackAlginementModule
+from pseudo_backprop.layers import FeedbackAlginementModule
 
 
 class FullyConnectedNetwork(torch.nn.Module):
