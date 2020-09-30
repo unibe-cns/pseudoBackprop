@@ -7,8 +7,8 @@ def import_test():
     """
         Evaluate imports to for simple test of the setup
     """
-    import pseudoBackprop
-    from pseudoBackprop import network
-    from pseudoBackprop import layers
+    import pseudo_backprop
+    from pseudo_backprop import network
+    from pseudo_backprop import layers
 
     assert True

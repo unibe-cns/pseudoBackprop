@@ -7,7 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
-from pseudoBackprop.network import FullyConnectedNetwork
+from pseudo_backprop.network import FullyConnectedNetwork
 
 logging.basicConfig(format='Train MNIST -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
