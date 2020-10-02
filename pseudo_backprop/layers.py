@@ -2,16 +2,22 @@
     Modules that define the backward path for the feedback alignment
     and the pseudo-prop lienarities
 """
+import logging
 import torch
 from torch import nn
 
+logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
+                    level=logging.DEBUG)
 
+
+# pylint: disable=W0223
 class FeedbackAlignmentLinearity(torch.autograd.Function):
     """
         The feedack alignment function
         This defines the forward and the backwords directions
     """
 
+    # pylint: disable=W0221
     @staticmethod
     def forward(ctx, input_torch, weight, back_weight, bias=None):
         """
@@ -26,12 +32,13 @@ class FeedbackAlignmentLinearity(torch.autograd.Function):
         """
 
         ctx.save_for_backward(input_torch, weight, back_weight, bias)
-        output = torch.matmul(input_torch, weight.t())
+        output = input_torch.mm(weight.t())
         if bias is not None:
             output += torch.unsqueeze(bias, 0).expand_as(output)
 
         return output
 
+    # pylint: disable=W0221
     @staticmethod
     def backward(ctx, grad_output):
         """
@@ -46,17 +53,15 @@ class FeedbackAlignmentLinearity(torch.autograd.Function):
         input_torch, _, back_weight, bias = ctx.saved_variables
         grad_back_weight = None
 
-        print(ctx.needs_input_grad)
-        # calculate the gradients
-        # if ctx.needs_input_grad[0]:
-        # gradient at the input of the forward pass
-        grad_input = torch.matmul(grad_output, back_weight.t())
-        # if ctx.needs_input_grad[1]:
-        # gradient at the weights
-        grad_weight = torch.matmul(grad_output.t(), input_torch)
-        if bias is not None and ctx.needs_input_grad[3]:
+        # calculate the gradients that are backpropagated
+        grad_input = grad_output.mm(back_weight)
+        # calculate the gradients on the weights
+        grad_weight = grad_output.t().mm(input_torch)
+        if (bias is not None) and (ctx.needs_input_grad[3]):
             # gradient at the bias if required
             grad_bias = grad_output.sum(0).squeeze(0)
+        else:
+            grad_bias = None
 
         return grad_input, grad_weight, grad_back_weight, grad_bias
 
@@ -81,30 +86,35 @@ class FeedbackAlginementModule(nn.Module):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
+        if bias:
+            logging.info('Bias is activated')
+        else:
+            logging.info('Bias is deactivated.')
 
         # create the parameters
-        self.w_matrix = nn.Parameter(torch.Tensor(self.output_size,
-                                                  self.input_size),
-                                     requires_grad=True)
+        self.weight = nn.Parameter(torch.Tensor(self.output_size,
+                                                self.input_size),
+                                   requires_grad=True)
         # create the biases if applicable
         if bias:
             self.bias = nn.Parameter(torch.Tensor(self.output_size),
                                      requires_grad=True)
         else:
-            self.register_parameters('bias', None)
+            self.register_buffer('bias', None)
 
         # create a variable for the random feedback weights
-        self.w_back = torch.autograd.Variable(
-                                torch.FloatTensor(self.input_size,
-                                                  self.output_size),
-                                requires_grad=False)
+        self.weight_back = torch.autograd.Variable(
+            torch.FloatTensor(self.output_size,
+                              self.input_size),
+            requires_grad=False)
 
         # Initialize the weights
-        torch.nn.init.kaiming_normal_(self.w_matrix, mode='fan_in',
-                                      nonlinearity='leaky_relu')
-        torch.nn.init.kaiming_normal_(self.w_back, mode='fan_in',
-                                      nonlinearity='leaky_relu')
-        torch.nn.init.normal_(self.bias)
+        torch.nn.init.kaiming_normal_(self.weight, mode='fan_in',
+                                      nonlinearity='relu')
+        torch.nn.init.kaiming_normal_(self.weight_back, mode='fan_in',
+                                      nonlinearity='relu')
+        if bias:
+            torch.nn.init.normal_(self.bias)
 
     def forward(self, input_tensor):
         """
@@ -112,6 +122,6 @@ class FeedbackAlginementModule(nn.Module):
         """
         # the forward calcualtion of the module
         return FeedbackAlignmentLinearity.apply(input_tensor,
-                                                self.w_matrix,
-                                                self.w_back,
+                                                self.weight,
+                                                self.weight_back,
                                                 self.bias)

@@ -14,11 +14,12 @@ def main():
     """Run the testing on the mnist dataset."""
     # The metaparameter
     path_to_model = 'models/mnist_backprop.pth'
-    layers = [784, 700, 10]
+    layers = [784, 800, 10]
     batch_size = 10
 
     # Load the model and the data
-    backprop_net = FullyConnectedNetwork.backprop(layers)
+    backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
+    #backprop_net = FullyConnectedNetwork.backprop(layers)
     backprop_net.load_state_dict(torch.load(path_to_model))
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize(0.5, 0.5)])
