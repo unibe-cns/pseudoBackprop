@@ -9,6 +9,7 @@ from torch import nn
 logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
+
 # pylint: disable=W0223
 class FeedbackAlignmentLinearity(torch.autograd.Function):
     """
