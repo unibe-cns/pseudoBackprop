@@ -1,6 +1,4 @@
-"""
-    An experiment to train the mnist dataset
-"""
+"""An experiment to train the mnist dataset"""
 import logging
 import os
 import argparse
@@ -106,12 +104,12 @@ def main(params):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Train a model on the mnist \
+    PARSER = argparse.ArgumentParser(description='Train a model on the mnist \
         dataset.')
-    parser.add_argument('--params', type=str,
+    PARSER.add_argument('--params', type=str,
                         help='Path to the parameter json.')
-    args = parser.parse_args()
-    with open(args.params, 'r+') as f:
-        parameters = json.load(f)
+    ARGS = PARSER.parse_args()
+    with open(ARGS.params, 'r+') as f:
+        PARAMETERS = json.load(f)
 
-    main(parameters)
+    main(PARAMETERS)

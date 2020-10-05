@@ -15,15 +15,15 @@ class FullyConnectedNetwork(torch.nn.Module):
         Feedforward network with relu non-linearities between the modules
     """
 
-    def __init__(self, layers, synapseModule):
+    def __init__(self, layers, synapse_module):
         """
             Initialize the network
 
             Params:
                 layers: the structur of the model
                         [input, hidden1, hidden2, ... , hiddenN, output]
-                synapseModule: connection between the layers
-                               it makes a difference in the backwards pass
+                synapse_module: connection between the layers
+                                it makes a difference in the backwards pass
         """
 
         # call parent for proper init
@@ -32,8 +32,8 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.layers = layers
 
         # create the synapse
-        self.synapses = [synapseModule(self.layers[index],
-                                       self.layers[index + 1]) for index in
+        self.synapses = [synapse_module(self.layers[index],
+                                        self.layers[index + 1]) for index in
                          range(self.num_layers - 1)]
 
         # make the operations

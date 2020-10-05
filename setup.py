@@ -4,7 +4,9 @@
 """
 
 from setuptools import setup
+import pseudo_backprop
 
+version = pseudo_backprop.__version__
 
 setup(name='pseudoBackprop',
       version="0.1",
@@ -15,7 +17,7 @@ setup(name='pseudoBackprop',
       packages=["pseudo_backprop"],
       package_dir={
           "pseudoBackprop": "pseudoBackprop",
-          },
+      },
       license="GNUv3",
       install_requires=["matplotlib", "numpy", "torch"],
       )
