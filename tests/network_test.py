@@ -1,6 +1,4 @@
-"""
-    Test the setup and evaluation of the networks
-"""
+"""Test the setup and evaluation of the networks."""
 import torch
 from pseudo_backprop.network import FullyConnectedNetwork
 
@@ -19,7 +17,7 @@ class TestClassBackprop:
         self.random_output = torch.randn(1, 10)
 
     def forward_bpnetwork_test(self):
-        """Make a forward pass through the network!""" 
+        """Make a forward pass through the network!"""
         self.backprop_net(self.random_input)
 
     def backward_bpnetwork_test(self):
@@ -43,7 +41,7 @@ class TestClassFeedbackAlignement:
         self.random_output = torch.randn(1, 10)
 
     def forward_feedbackalignement_test(self):
-        """Make a forward pass through the network!""" 
+        """Make a forward pass through the network!"""
         self.fa_net(self.random_input)
 
     def backward_feedbackalignement_test(self):
