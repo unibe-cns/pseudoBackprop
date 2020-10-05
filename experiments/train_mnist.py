@@ -1,4 +1,4 @@
-"""An experiment to train the mnist dataset"""
+"""An experiment to train the mnist dataset."""
 import logging
 import os
 import argparse

@@ -12,18 +12,18 @@ class TestClassBackprop:
     """
 
     def setUp(self):
-        """set up an architecture and create a network"""
+        """Set up an architecture and create a network!"""
         self.layers = [200, 300, 320, 300, 10]
         self.backprop_net = FullyConnectedNetwork.backprop(self.layers)
         self.random_input = torch.randn(1, 200)
         self.random_output = torch.randn(1, 10)
 
     def forward_bpnetwork_test(self):
-        """make a forward pass through the network""" 
+        """Make a forward pass through the network!""" 
         self.backprop_net(self.random_input)
 
     def backward_bpnetwork_test(self):
-        """make a backward pass to calculate the gradients"""
+        """Make a backward pass to calculate the gradients!"""
         out = self.backprop_net(self.random_input)
         self.backprop_net.zero_grad()
         out.backward(self.random_output)
@@ -36,18 +36,18 @@ class TestClassFeedbackAlignement:
     """
 
     def setUp(self):
-        """set up an architecture and create a network"""
+        """Set up an architecture and create a network!"""
         self.layers = [200, 300, 320, 300, 10]
         self.fa_net = FullyConnectedNetwork.feedback_alignement(self.layers)
         self.random_input = torch.randn(1, 200)
         self.random_output = torch.randn(1, 10)
 
     def forward_feedbackalignement_test(self):
-        """make a forward pass through the network""" 
+        """Make a forward pass through the network!""" 
         self.fa_net(self.random_input)
 
     def backward_feedbackalignement_test(self):
-        """make a backward pass to calculate the gradients"""
+        """Make a backward pass to calculate the gradients!"""
         out = self.fa_net(self.random_input)
         self.fa_net.zero_grad()
         out.backward(self.random_output)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Package to implement and test pseudoackprop
+"""
+Package to implement and test pseudoackprop
 
 This module is meant to implement pseudo backpropagation. This means that
 in the backpropagation algorithm the backward pass flows throught the

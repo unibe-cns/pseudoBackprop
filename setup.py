@@ -6,10 +6,9 @@
 from setuptools import setup
 import pseudo_backprop
 
-version = pseudo_backprop.__version__
 
 setup(name='pseudoBackprop',
-      version="0.1",
+      version=pseudo_backprop.__version__,
       description='',
       author='Akos Kungl',
       author_email='afkungl@kip.uni-heidelberg.de',
