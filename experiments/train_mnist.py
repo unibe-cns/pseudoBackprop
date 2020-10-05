@@ -106,9 +106,6 @@ def main(params):
     # save the result
     logging.info("Saving the model")
 
-    torch.save(backprop_net.state_dict(),
-               os.path.join(model_folder, 'mnist_backprop.pth'))
-
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description='Train a model on the mnist \
