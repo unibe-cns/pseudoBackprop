@@ -9,4 +9,5 @@ generated-members=numpy.*,torch.*
 max-line-length=100
 
 # allow the usage of f-strings in logging
-disable=logging-fstring-interpolation
+disable=logging-fstring-interpolation,
+        D212

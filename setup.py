@@ -4,10 +4,11 @@
 """
 
 from setuptools import setup
+import pseudo_backprop
 
 
 setup(name='pseudoBackprop',
-      version="0.1",
+      version=pseudo_backprop.__version__,
       description='',
       author='Akos Kungl',
       author_email='afkungl@kip.uni-heidelberg.de',
@@ -15,7 +16,7 @@ setup(name='pseudoBackprop',
       packages=["pseudo_backprop"],
       package_dir={
           "pseudoBackprop": "pseudoBackprop",
-          },
+      },
       license="GNUv3",
       install_requires=["matplotlib", "numpy", "torch"],
       )
