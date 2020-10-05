@@ -60,6 +60,13 @@ def main(params):
     optimizer = torch.optim.SGD(
         backprop_net.parameters(), lr=learning_rate, momentum=momentum)
 
+    # save the initial network
+    file_to_save = (f"model_{model_type}_epoch_0_images_"
+                    f"0.pth")
+    path_to_save = os.path.join(model_folder, file_to_save)
+    torch.save(backprop_net.state_dict(),
+               path_to_save)
+
     # train the network
     for epoch in range(epochs):  # loop over the dataset multiple times
 
