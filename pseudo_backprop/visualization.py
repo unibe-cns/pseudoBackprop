@@ -26,13 +26,12 @@ def prepare_axes(axes):
     axes.get_yaxis().tick_left()
 
 
-def single_shot(iteration, backprop=None, feedback_a=None, pseudo=None,
+def single_shot(backprop=None, feedback_a=None, pseudo=None,
                 y_type="Loss"):
     """
     Plot a single shot experiment
 
     Args:
-        iteration (numpy vector): iteration vector
         backprop (None, optional): loss/error ratio for vanilla backprop
         fa (None, optional): loss/error ratio for feedback alignement
         pseudo (None, optional): loss/error ratio for pseudo backprop
@@ -47,7 +46,7 @@ def single_shot(iteration, backprop=None, feedback_a=None, pseudo=None,
 
     for item, name in zip([backprop, feedback_a, pseudo], NAMES):
         if item is not None:
-            axes.plot(iteration, item, linewidth=2, color=COLORS[name],
+            axes.plot(item[:, 0], item[:, 1], linewidth=2, color=COLORS[name],
                       label=name)
 
     axes.legend()
