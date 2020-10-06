@@ -46,9 +46,9 @@ def single_shot(iteration, backprop=None, feedback_a=None, pseudo=None,
     prepare_axes(axes)
 
     for item, name in zip([backprop, feedback_a, pseudo], NAMES):
-        if not item is None:
+        if item is not None:
             axes.plot(iteration, item, linewidth=2, color=COLORS[name],
-                    label=name)
+                      label=name)
 
     axes.legend()
     axes.set_xlabel("Epochs")
