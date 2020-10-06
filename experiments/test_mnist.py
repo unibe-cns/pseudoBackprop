@@ -10,6 +10,7 @@ import torchvision.transforms as transforms
 from pseudo_backprop.network import FullyConnectedNetwork
 from pseudo_backprop.aux import evaluate_model
 
+
 logging.basicConfig(format='Train MNIST -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
@@ -45,7 +46,7 @@ def main(params, dataset):
     # run over the output and evaluate the models
     loss_array = []
     conf_matrix_array = {}
-    class_ratio_array = []
+    error_ratio_array = []
     for index in range(epochs * 6 + 1):
         epoch = 0 if index == 0 else (index - 1) // 6
         ims = 0 if index == 0 else (((index - 1) % 6) + 1) * 10000
@@ -61,19 +62,19 @@ def main(params, dataset):
                        confusion_matrix.sum())
         loss_array.append(loss)
         conf_matrix_array[index] = confusion_matrix.tolist()
-        class_ratio_array.append(class_ratio)
+        error_ratio_array.append(1 - class_ratio)
         logging.info(f'The final classification ratio is: {class_ratio}')
         logging.info(f'The final loss function: {loss}')
         logging.info(f'The final confusion matrix is: {confusion_matrix}')
 
     # Save the results into an appropriate file into the model folder
-    epoch_array = np.arange(0, epochs, 1/6)
+    epoch_array = np.arange(0, epochs + 1/12, 1/6)
     image_array = np.arange(0, epochs * 60000 + 10000, 10000)
-    to_save = np.concatenate([epoch_array, image_array,
-                              np.array(class_ratio_array)]).T
+    to_save = np.array([epoch_array, image_array,
+                        np.array(error_ratio_array), np.array(loss_array)]).T
     file_to_save = os.path.join(model_folder, f'results_{dataset}.csv')
     np.savetxt(file_to_save, to_save, delimiter=',',
-               header='epochs, images, class_ratio')
+               header='epochs, images, error_ratio, loss')
     with open(os.path.join(model_folder,
                            f'confusion_matrix_{dataset}.json'), 'w') as file_f:
         json.dump(conf_matrix_array, file_f, sort_keys=True, indent=4)
