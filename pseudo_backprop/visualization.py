@@ -22,8 +22,8 @@ def prepare_axes(axes):
 
     axes.spines['top'].set_visible(False)
     axes.spines['right'].set_visible(False)
-    axes.get_xaxesis().tick_bottom()
-    axes.get_yaxesis().tick_left()
+    axes.get_xaxis().tick_bottom()
+    axes.get_yaxis().tick_left()
 
 
 def single_shot(iteration, backprop=None, feedback_a=None, pseudo=None,
