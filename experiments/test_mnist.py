@@ -36,7 +36,7 @@ def main(params, dataset):
     possible_networks = ['fa', 'backprop']
     if model_type == 'fa':
         backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
-    elif model_folder == 'backprop':
+    elif model_type == 'backprop':
         backprop_net = FullyConnectedNetwork.backprop(layers)
     else:
         raise ValueError(f'{model_type} is not a valid option. Implemented \
@@ -67,9 +67,10 @@ def main(params, dataset):
         logging.info(f'The final confusion matrix is: {confusion_matrix}')
 
     # Save the results into an appropriate file into the model folder
-    epoch_array = np.arange(0, epochs + 1/6, 1/6)
+    epoch_array = np.arange(0, epochs, 1/6)
     image_array = np.arange(0, epochs * 60000 + 10000, 10000)
-    to_save = np.array([epoch_array, image_array, class_ratio_array]).T
+    to_save = np.concatenate([epoch_array, image_array,
+                              np.array(class_ratio_array)]).T
     file_to_save = os.path.join(model_folder, f'results_{dataset}.csv')
     np.savetxt(file_to_save, to_save, delimiter=',',
                header='epochs, images, class_ratio')
