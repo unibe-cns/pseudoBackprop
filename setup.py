@@ -7,16 +7,20 @@ from setuptools import setup
 import pseudo_backprop
 
 
-setup(name='pseudoBackprop',
+setup(name='pseudo_backprop',
       version=pseudo_backprop.__version__,
       description='',
       author='Akos Kungl',
       author_email='afkungl@kip.uni-heidelberg.de',
-      url='https://github.com/afkungl/psedoBackprop',
+      url='https://github.com/afkungl/pseudoBackprop',
       packages=["pseudo_backprop"],
       package_dir={
-          "pseudoBackprop": "pseudoBackprop",
+          "pseudo_backprop": "pseudo_backprop",
       },
       license="GNUv3",
       install_requires=["matplotlib", "numpy", "torch"],
+      package_data={
+          "pseudo_backprop": ["defaults/plotstyle"],
+          },
+      include_package_data=True
       )

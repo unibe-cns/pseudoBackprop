@@ -49,7 +49,7 @@ def main(params):
     possible_networks = ['fa', 'backprop']
     if model_type == 'fa':
         backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
-    elif model_folder == 'backprop':
+    elif model_type == 'backprop':
         backprop_net = FullyConnectedNetwork.backprop(layers)
     else:
         raise ValueError(f'{model_type} is not a valid option. Implemented \

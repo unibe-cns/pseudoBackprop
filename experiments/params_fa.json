@@ -1,0 +1,9 @@
+{
+    "batch_size": 10,
+    "layers": [784, 800, 10],
+    "epochs": 1,
+    "model_folder": "model_fa",
+    "model_type": "fa",
+    "learning_rate": 0.001,
+    "momentum": 0.9
+}
