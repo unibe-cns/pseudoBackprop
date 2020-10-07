@@ -1,7 +1,6 @@
 """collection of convenience function to plot the results"""
 import os
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 # load the style file
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -24,14 +23,16 @@ def prepare_axes(axes):
     axes.spines['right'].set_visible(False)
     axes.get_xaxis().tick_bottom()
     axes.get_yaxis().tick_left()
+    axes.set_yscale('log')
 
 
-def single_shot(backprop=None, feedback_a=None, pseudo=None,
+def single_shot(axes, backprop=None, feedback_a=None, pseudo=None,
                 y_type="Loss"):
     """
     Plot a single shot experiment
 
     Args:
+        axes: an axes object
         backprop (None, optional): loss/error ratio for vanilla backprop
         fa (None, optional): loss/error ratio for feedback alignement
         pseudo (None, optional): loss/error ratio for pseudo backprop
@@ -41,7 +42,6 @@ def single_shot(backprop=None, feedback_a=None, pseudo=None,
         f: figure object
         axes: axeses object
     """
-    fig, axes = plt.subplots()
     prepare_axes(axes)
 
     for item, name in zip([backprop, feedback_a, pseudo], NAMES):
@@ -52,5 +52,3 @@ def single_shot(backprop=None, feedback_a=None, pseudo=None,
     axes.legend()
     axes.set_xlabel("Epochs")
     axes.set_ylabel(y_type)
-
-    return fig, axes
