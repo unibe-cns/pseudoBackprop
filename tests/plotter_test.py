@@ -13,7 +13,6 @@ Y_ARRAY_3 = np.random.normal(size=(100, 2)) + 6
 
 def single_plot_test():
     """Make a single plot"""
-
     fig, axes = plt.subplots(1)
     visu.single_shot(axes, backprop=Y_ARRAY_1,
                      feedback_a=Y_ARRAY_2,

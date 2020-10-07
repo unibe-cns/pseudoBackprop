@@ -1,4 +1,4 @@
-"""collection of convenience function to plot the results"""
+"""collection of convenience function to plot the results."""
 import os
 import matplotlib as mpl
 
@@ -18,7 +18,6 @@ def prepare_axes(axes):
     Args:
         axes: axeses object
     """
-
     axes.spines['top'].set_visible(False)
     axes.spines['right'].set_visible(False)
     axes.get_xaxis().tick_bottom()
