@@ -34,11 +34,13 @@ def main(params, dataset):
                                              shuffle=True, num_workers=2)
 
     # make the networks
-    possible_networks = ['fa', 'backprop']
+    possible_networks = ['fa', 'backprop', 'pseudo_backprop']
     if model_type == 'fa':
         backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
     elif model_type == 'backprop':
         backprop_net = FullyConnectedNetwork.backprop(layers)
+    elif model_type == 'pseudo_backprop':
+        backprop_net = FullyConnectedNetwork.pseudo_backprop(layers)
     else:
         raise ValueError(f'{model_type} is not a valid option. Implemented \
             options are in {possible_networks}')
