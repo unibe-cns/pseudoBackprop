@@ -27,6 +27,9 @@ def main(params):
     learning_rate = params["learning_rate"]
     momentum = params["momentum"]
 
+    # set random seed
+    torch.manual_seed(params["random_seed"])
+
     # set-up the folder to save the model
     if not os.path.exists(model_folder):
         os.makedirs(model_folder)
