@@ -1,20 +1,20 @@
 """Experiment to test the trained network on the mnist dataset."""
 import logging
-import argparse
 import json
 import os
 import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
-from pseudo_backprop.network import FullyConnectedNetwork
 from pseudo_backprop.aux import evaluate_model
+from pseudo_backprop.experiments import exp_aux
 
 
 logging.basicConfig(format='Train MNIST -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
+# pylint: disable=R0914
 def main(params, dataset):
     """Run the testing on the mnist dataset."""
     # The metaparameter
@@ -34,16 +34,7 @@ def main(params, dataset):
                                              shuffle=True, num_workers=2)
 
     # make the networks
-    possible_networks = ['fa', 'backprop', 'pseudo_backprop']
-    if model_type == 'fa':
-        backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
-    elif model_type == 'backprop':
-        backprop_net = FullyConnectedNetwork.backprop(layers)
-    elif model_type == 'pseudo_backprop':
-        backprop_net = FullyConnectedNetwork.pseudo_backprop(layers)
-    else:
-        raise ValueError(f'{model_type} is not a valid option. Implemented \
-            options are in {possible_networks}')
+    backprop_net = exp_aux.load_network(model_type, layers)
 
     # run over the output and evaluate the models
     loss_array = []
@@ -83,14 +74,8 @@ def main(params, dataset):
 
 
 if __name__ == '__main__':
-    PARSER = argparse.ArgumentParser(description='Train a model on the mnist \
-        dataset.')
-    PARSER.add_argument('--params', type=str,
-                        help='Path to the parameter json.')
-    PARSER.add_argument('--dataset', type=str,
-                        help='Choose from <test> or <train>.',
-                        default='test')
-    ARGS = PARSER.parse_args()
+
+    ARGS = exp_aux.parse_experiment_arguments()
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 
