@@ -16,7 +16,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         Feedforward network with relu non-linearities between the modules
     """
 
-    def __init__(self, layers, synapse_module):
+    def __init__(self, layers, synapse_module, synapse_param=None):
         """
             Initialize the network
 
@@ -33,8 +33,11 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.layers = layers
 
         # create the synapse
+        if synapse_param is None:
+            synapse_param = {}
         self.synapses = [synapse_module(self.layers[index],
-                                        self.layers[index + 1]) for index in
+                                        self.layers[index + 1],
+                                        **synapse_param) for index in
                          range(self.num_layers - 1)]
 
         # make the operations
@@ -62,12 +65,13 @@ class FullyConnectedNetwork(torch.nn.Module):
         return cls(layers, FeedbackAlginementModule)
 
     @classmethod
-    def pseudo_backprop(cls, layers):
+    def pseudo_backprop(cls, layers, pinverse_redo):
         """
             Delegating constructor for the backprop case
         """
         logging.info("Network with feedback alignement is constructed.")
-        return cls(layers, PseudoBackpropModule)
+        return cls(layers, PseudoBackpropModule,
+                   {"pinverse_redo": pinverse_redo})
 
     def forward(self, inputs):
         """
