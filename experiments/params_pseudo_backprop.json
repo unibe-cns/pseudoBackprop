@@ -1,0 +1,9 @@
+{
+    "batch_size": 10,
+    "layers": [784, 800, 10],
+    "epochs": 4,
+    "model_folder": "model_pseudo",
+    "model_type": "pseudo_backprop",
+    "learning_rate": 0.001,
+    "momentum": 0.9
+}

@@ -4,6 +4,7 @@
 import logging
 import torch
 from pseudo_backprop.layers import FeedbackAlginementModule
+from pseudo_backprop.layers import PseudoBackpropModule
 
 logging.basicConfig(format='Network modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
@@ -59,6 +60,14 @@ class FullyConnectedNetwork(torch.nn.Module):
         """
         logging.info("Network with feedback alignement is constructed.")
         return cls(layers, FeedbackAlginementModule)
+
+    @classmethod
+    def pseudo_backprop(cls, layers):
+        """
+            Delegating constructor for the backprop case
+        """
+        logging.info("Network with feedback alignement is constructed.")
+        return cls(layers, PseudoBackpropModule)
 
     def forward(self, inputs):
         """

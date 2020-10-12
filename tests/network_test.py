@@ -51,3 +51,27 @@ class TestClassFeedbackAlignement:
         out = self.fa_net(self.random_input)
         self.fa_net.zero_grad()
         out.backward(self.random_output)
+
+class TestClassPseudoBackpropagation:
+    """
+        test the setup of a pseudo backpropagation network with one forward and
+        one backwar step on synthetic data
+    """
+
+    @classmethod
+    def setup_class(cls):
+        """Set up an architecture and create a network!"""
+        cls.layers = [200, 300, 320, 300, 10]
+        cls.fa_net = FullyConnectedNetwork.pseudo_backprop(cls.layers)
+        cls.random_input = torch.randn(1, 200)
+        cls.random_output = torch.randn(1, 10)
+
+    def forward_feedbackalignement_test(self):
+        """Make a forward pass through the network!"""
+        self.fa_net(self.random_input)
+
+    def backward_feedbackalignement_test(self):
+        """Make a backward pass to calculate the gradients!"""
+        out = self.fa_net(self.random_input)
+        self.fa_net.zero_grad()
+        out.backward(self.random_output)
