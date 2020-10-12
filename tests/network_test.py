@@ -9,12 +9,13 @@ class TestClassBackprop:
         one backwar step on synthetic data
     """
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         """Set up an architecture and create a network!"""
-        self.layers = [200, 300, 320, 300, 10]
-        self.backprop_net = FullyConnectedNetwork.backprop(self.layers)
-        self.random_input = torch.randn(1, 200)
-        self.random_output = torch.randn(1, 10)
+        cls.layers = [200, 300, 320, 300, 10]
+        cls.backprop_net = FullyConnectedNetwork.backprop(cls.layers)
+        cls.random_input = torch.randn(1, 200)
+        cls.random_output = torch.randn(1, 10)
 
     def forward_bpnetwork_test(self):
         """Make a forward pass through the network!"""
@@ -33,12 +34,13 @@ class TestClassFeedbackAlignement:
         one backwar step on synthetic data
     """
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         """Set up an architecture and create a network!"""
-        self.layers = [200, 300, 320, 300, 10]
-        self.fa_net = FullyConnectedNetwork.feedback_alignement(self.layers)
-        self.random_input = torch.randn(1, 200)
-        self.random_output = torch.randn(1, 10)
+        cls.layers = [200, 300, 320, 300, 10]
+        cls.fa_net = FullyConnectedNetwork.feedback_alignement(cls.layers)
+        cls.random_input = torch.randn(1, 200)
+        cls.random_output = torch.randn(1, 10)
 
     def forward_feedbackalignement_test(self):
         """Make a forward pass through the network!"""
