@@ -17,11 +17,11 @@ logging.info('Running the training...')
 with open('log_train_bp.log', 'w') as out_file:
     train_bp = subprocess.Popen(['python', 'train_mnist.py',
                                  '--params', 'params_vbp.json'],
-                                stdout=out_file, stderr=out_file)
+                                stdout=out_file, stderr=out_file, shell=False)
 with open('log_train_fa.log', 'w') as out_file:
     train_fa = subprocess.Popen(['python', 'train_mnist.py',
                                  '--params', 'params_fa.json'],
-                                stdout=out_file, stderr=out_file)
+                                stdout=out_file, stderr=out_file, shell=False)
 # wait for the training
 wait_for = [p.wait() for p in (train_bp, train_fa)]
 logging.info('Training has finished')
@@ -32,28 +32,32 @@ with open('log_eval_test_bp.log', 'w') as out_file:
     eval_bp_test = subprocess.Popen(['python', 'test_mnist.py',
                                      '--params', 'params_vbp.json',
                                      '--dataset', 'test'],
-                                    stdout=out_file, stderr=out_file)
+                                    stdout=out_file, stderr=out_file,
+                                    shell=False)
 with open('log_eval_train_bp.log', 'w') as out_file:
     eval_bp_train = subprocess.Popen(['python', 'test_mnist.py',
                                       '--params', 'params_vbp.json',
                                       '--dataset', 'train'],
-                                     stdout=out_file, stderr=out_file)
+                                     stdout=out_file, stderr=out_file,
+                                     shell=False)
 with open('log_eval_test_fa.log', 'w') as out_file:
     eval_fa_test = subprocess.Popen(['python', 'test_mnist.py',
                                      '--params', 'params_fa.json',
                                      '--dataset', 'test'],
-                                    stdout=out_file, stderr=out_file)
+                                    stdout=out_file, stderr=out_file,
+                                    shell=False)
 with open('log_eval_train_fa.log', 'w') as out_file:
     eval_fa_train = subprocess.Popen(['python', 'test_mnist.py',
                                       '--params', 'params_fa.json',
                                       '--dataset', 'train'],
-                                     stdout=out_file, stderr=out_file)
+                                     stdout=out_file, stderr=out_file,
+                                     shell=False)
 wait_for = [p.wait() for p in (eval_bp_test, eval_bp_train,
                                eval_fa_test, eval_fa_train)]
 logging.info('Evaluation has finished')
 
 logging.info('Start the plotting...')
-subprocess.Popen(['python', 'plot_mnist_results.py',
-                  '--params_vbp', 'params_vbp.json',
-                  '--params_fa', 'params_fa.json'])
+plot_call = ['python', 'plot_mnist_results.py', '--params_vbp',
+             'params_vbp.json', '--params_fa', 'params_fa.json']
+subprocess.Popen(plot_call, shell=False)
 logging.info('The plotting has finished')
