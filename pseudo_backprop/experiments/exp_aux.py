@@ -3,12 +3,14 @@ import argparse
 from pseudo_backprop.network import FullyConnectedNetwork
 
 
-def load_network(model_type, layers):
+def load_network(model_type, layers, pinverse_recalc=9000):
     """Load the network for testing and training
 
     Args:
         model_type: type of the model, string
         layers (list): number of neurons in the layers
+        pinverse_redo (int): every x iteration calculate the
+                             only applies to pseudo-backprop
     """
 
     # make the networks
@@ -18,7 +20,8 @@ def load_network(model_type, layers):
     elif model_type == 'backprop':
         backprop_net = FullyConnectedNetwork.backprop(layers)
     elif model_type == 'pseudo_backprop':
-        backprop_net = FullyConnectedNetwork.pseudo_backprop(layers)
+        backprop_net = FullyConnectedNetwork.pseudo_backprop(layers,
+                                                             pinverse_recalc)
     else:
         raise ValueError(f'{model_type} is not a valid option. Implemented \
             options are in {possible_networks}')

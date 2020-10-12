@@ -26,6 +26,10 @@ def main(params):
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
     momentum = params["momentum"]
+    if "pinverse_recalc" in params:
+        add_param = {"pinverse_recalc": params["pinverse_recalc"]}
+    else:
+        add_param = {}
 
     # set random seed
     torch.manual_seed(params["random_seed"])
@@ -49,7 +53,7 @@ def main(params):
     logging.info("Datasets are loaded")
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers)
+    backprop_net = exp_aux.load_network(model_type, layers, **add_param)
 
     # set up the optimizer and the loss function
     loss_function = torch.nn.CrossEntropyLoss()
