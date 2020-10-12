@@ -201,7 +201,8 @@ class PseudoBackpropModule(nn.Module):
         Define a module of synapses for the pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True):
+    def __init__(self, input_size, output_size, bias=True,
+                 pinverse_redo=1):
         """
             feedback alignement module with initilaization
 
@@ -210,12 +211,16 @@ class PseudoBackpropModule(nn.Module):
             output_size: output size
                          The module represents a linear map of the size
                          input_size X output_size
+            pinverse_redo: after this number of evaluations the pseudoinverse
+                           calcualted again
         """
 
         # call parent for proper init
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
+        self.pinverse_redo = pinverse_redo
+        self.counter = 0
         if bias:
             logging.info('Bias is activated')
         else:
@@ -225,6 +230,7 @@ class PseudoBackpropModule(nn.Module):
         self.weight = nn.Parameter(torch.Tensor(self.output_size,
                                                 self.input_size),
                                    requires_grad=True)
+
         # create the biases if applicable
         if bias:
             self.bias = nn.Parameter(torch.Tensor(self.output_size),
@@ -235,6 +241,8 @@ class PseudoBackpropModule(nn.Module):
         # Initialize the weights
         torch.nn.init.kaiming_normal_(self.weight, mode='fan_in',
                                       nonlinearity='relu')
+        self.pinv = nn.Parameter(torch.pinverse(self.weight, rcond=1e-10),
+                                 requires_grad=False)
         if bias:
             torch.nn.init.normal_(self.bias)
 
@@ -243,6 +251,17 @@ class PseudoBackpropModule(nn.Module):
             Method to calculate the forward processing through the synapses
         """
         # the forward calcualtion of the module
-        return PseudoBackpropLinearity.apply(input_tensor,
-                                             self.weight,
-                                             self.bias)
+        self.counter += 1
+        if self.counter == self.pinverse_redo:
+            self._calc_pinv()
+            self.counter = 0
+
+        return FeedbackAlignmentLinearity.apply(input_tensor,
+                                                self.weight,
+                                                self.pinv.t(),
+                                                self.bias)
+
+    def _calc_pinv(self):
+
+        self.pinv = nn.Parameter(torch.pinverse(self.weight, rcond=1e-10),
+                                 requires_grad=False)
