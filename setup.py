@@ -10,8 +10,8 @@ import pseudo_backprop
 setup(name='pseudo_backprop',
       version=pseudo_backprop.__version__,
       description='',
-      author='Akos Kungl',
-      author_email='afkungl@kip.uni-heidelberg.de',
+      author='Akos F. Kungl',
+      author_email='fkungl@kip.uni-heidelberg.de',
       url='https://github.com/afkungl/pseudoBackprop',
       packages=["pseudo_backprop"],
       package_dir={
