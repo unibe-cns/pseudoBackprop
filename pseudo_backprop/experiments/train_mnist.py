@@ -7,12 +7,13 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
-from pseudo_backprop.network import FullyConnectedNetwork
+from pseudo_backprop.experiments import exp_aux
 
 logging.basicConfig(format='Train MNIST -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
+# pylint: disable=R0914
 def main(params):
     """
         Execute the training and save the result
@@ -49,16 +50,7 @@ def main(params):
     logging.info("Datasets are loaded")
 
     # make the networks
-    possible_networks = ['fa', 'backprop', 'pseudo_backprop']
-    if model_type == 'fa':
-        backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
-    elif model_type == 'backprop':
-        backprop_net = FullyConnectedNetwork.backprop(layers)
-    elif model_type == 'pseudo_backprop':
-        backprop_net = FullyConnectedNetwork.pseudo_backprop(layers)
-    else:
-        raise ValueError(f'{model_type} is not a valid option. Implemented \
-            options are in {possible_networks}')
+    backprop_net = exp_aux.load_network(model_type, layers)
 
     # set up the optimizer and the loss function
     loss_function = torch.nn.CrossEntropyLoss()
