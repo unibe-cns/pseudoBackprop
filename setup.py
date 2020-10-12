@@ -13,7 +13,7 @@ setup(name='pseudo_backprop',
       author='Akos Kungl',
       author_email='afkungl@kip.uni-heidelberg.de',
       url='https://github.com/afkungl/pseudoBackprop',
-      packages=["pseudo_backprop"],
+      packages=["pseudo_backprop", "pseudo_backprop/experiments"],
       package_dir={
           "pseudo_backprop": "pseudo_backprop",
       },
