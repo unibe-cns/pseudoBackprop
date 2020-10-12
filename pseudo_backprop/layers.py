@@ -66,6 +66,7 @@ class FeedbackAlignmentLinearity(torch.autograd.Function):
         return grad_input, grad_weight, grad_back_weight, grad_bias
 
 
+# pylint: disable=R0903
 class FeedbackAlginementModule(nn.Module):
     """
         Define a module of synapses for the feedback alignement synapses
