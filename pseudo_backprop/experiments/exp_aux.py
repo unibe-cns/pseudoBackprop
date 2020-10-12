@@ -3,7 +3,6 @@ import argparse
 from pseudo_backprop.network import FullyConnectedNetwork
 
 
-
 def load_network(model_type, layers):
     """Load the network for testing and training
 
