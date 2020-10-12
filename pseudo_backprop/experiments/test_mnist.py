@@ -1,6 +1,5 @@
 """Experiment to test the trained network on the mnist dataset."""
 import logging
-import argparse
 import json
 import os
 import numpy as np
@@ -75,14 +74,8 @@ def main(params, dataset):
 
 
 if __name__ == '__main__':
-    PARSER = argparse.ArgumentParser(description='Train a model on the mnist \
-        dataset.')
-    PARSER.add_argument('--params', type=str,
-                        help='Path to the parameter json.')
-    PARSER.add_argument('--dataset', type=str,
-                        help='Choose from <test> or <train>.',
-                        default='test')
-    ARGS = PARSER.parse_args()
+
+    ARGS = exp_aux.parse_experiment_arguments()
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 

@@ -1,7 +1,6 @@
 """An experiment to train the mnist dataset."""
 import logging
 import os
-import argparse
 import json
 import torch
 import torchvision
@@ -105,11 +104,8 @@ def main(params):
 
 
 if __name__ == '__main__':
-    PARSER = argparse.ArgumentParser(description='Train a model on the mnist \
-        dataset.')
-    PARSER.add_argument('--params', type=str,
-                        help='Path to the parameter json.')
-    ARGS = PARSER.parse_args()
+
+    ARGS = exp_aux.parse_experiment_arguments()
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 
