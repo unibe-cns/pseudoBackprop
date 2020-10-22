@@ -10,7 +10,7 @@ from pseudo_backprop.aux import evaluate_model
 from pseudo_backprop.experiments import exp_aux
 
 
-logging.basicConfig(format='Train MNIST -- %(levelname)s: %(message)s',
+logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
@@ -23,26 +23,47 @@ def main(params, dataset):
     model_type = params['model_type']
     model_folder = params["model_folder"]
     epochs = params["epochs"]
+    if "dataset" not in params:
+        dataset_type = "mnist"
+    else:
+        dataset_type = params["dataset"]
 
     # Load the model and the data
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize(0.5, 0.5)])
-    testset = torchvision.datasets.MNIST('./data', train=(dataset == 'train'),
-                                         download=True,
-                                         transform=transform)
+    if dataset_type == "cifar10":
+        testset = torchvision.datasets.CIFAR10('./data',
+                                               train=(dataset == 'train'),
+                                               download=True,
+                                               transform=transform)
+    elif dataset_type == "mnist":
+        testset = torchvision.datasets.MNIST('./data',
+                                             train=(dataset == 'train'),
+                                             download=True,
+                                             transform=transform)
+    else:
+        raise ValueError("The received dataset <<{}>> is not implemented. \
+                          Choose from ['mnist', 'cifar10']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
 
     # make the networks
     backprop_net = exp_aux.load_network(model_type, layers)
 
+    # every 10000 images there is a saved model, hence we have to take into
+    # account that MNIST has 60 000 images and CIFAR10 50 000
+    if dataset_type == "mnist":
+        count_helper = 6
+    elif dataset_type == "cifar10":
+        count_helper = 5
+
     # run over the output and evaluate the models
     loss_array = []
     conf_matrix_array = {}
     error_ratio_array = []
-    for index in range(epochs * 6 + 1):
-        epoch = 0 if index == 0 else (index - 1) // 6
-        ims = 0 if index == 0 else (((index - 1) % 6) + 1) * 10000
+    for index in range(epochs * count_helper + 1):
+        epoch = 0 if index == 0 else (index - 1) // count_helper
+        ims = 0 if index == 0 else (((index - 1) % count_helper) + 1) * 10000
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
         logging.info(f'Working on epoch {epoch} and image {ims}.')
@@ -58,11 +79,11 @@ def main(params, dataset):
         error_ratio_array.append(1 - class_ratio)
         logging.info(f'The final classification ratio is: {class_ratio}')
         logging.info(f'The final loss function: {loss}')
-        logging.info(f'The final confusion matrix is: {confusion_matrix}')
+        logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
 
     # Save the results into an appropriate file into the model folder
-    epoch_array = np.arange(0, epochs + 1/12, 1/6)
-    image_array = np.arange(0, epochs * 60000 + 10000, 10000)
+    epoch_array = np.arange(0, epochs + 0.001, 1/count_helper)
+    image_array = np.arange(0, epochs * count_helper * 10000 + 10000, 10000)
     to_save = np.array([epoch_array, image_array,
                         np.array(error_ratio_array), np.array(loss_array)]).T
     file_to_save = os.path.join(model_folder, f'results_{dataset}.csv')
