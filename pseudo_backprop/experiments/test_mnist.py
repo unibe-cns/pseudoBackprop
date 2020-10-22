@@ -43,7 +43,7 @@ def main(params, dataset):
                                              transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10']")
+                          Choose from ['mnist', 'cifar10']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
 
