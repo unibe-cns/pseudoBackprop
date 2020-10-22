@@ -1,0 +1,11 @@
+{
+    "batch_size": 10,
+    "layers": [3072, 400, 10],
+    "epochs": 3,
+    "model_folder": "model_fa",
+    "model_type": "fa",
+    "learning_rate": 0.001,
+    "momentum": 0.9,
+    "random_seed": 456732,
+    "dataset": "cifar10"
+}

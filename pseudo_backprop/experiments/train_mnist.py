@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
 
-logging.basicConfig(format='Train MNIST -- %(levelname)s: %(message)s',
+logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
@@ -30,6 +30,10 @@ def main(params):
         add_param = {"pinverse_recalc": params["pinverse_recalc"]}
     else:
         add_param = {}
+    if "dataset" not in params:
+        dataset_type = "mnist"
+    else:
+        dataset_type = params["dataset"]
 
     # set random seed
     torch.manual_seed(params["random_seed"])
@@ -45,9 +49,17 @@ def main(params):
 
     # get the dataset
     logging.info("Loading the datasets")
-    trainset = torchvision.datasets.MNIST('./data', train=True,
-                                          download=True,
-                                          transform=transform)
+    if dataset_type == "cifar10":
+        trainset = torchvision.datasets.CIFAR10('./data', train=True,
+                                                download=True,
+                                                transform=transform)
+    elif dataset_type == "mnist":
+        trainset = torchvision.datasets.MNIST('./data', train=True,
+                                              download=True,
+                                              transform=transform)
+    else:
+        raise ValueError("The received dataset <<{}>> is not implemented. \
+                          Choose from ['mnist', 'cifar10']")
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
     logging.info("Datasets are loaded")
