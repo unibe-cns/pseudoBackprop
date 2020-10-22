@@ -28,8 +28,8 @@ with open('log_train_pseudo.log', 'w') as out_file:
     train_pbp = subprocess.Popen(['python', '-m',
                                   'pseudo_backprop.experiments.train_mnist',
                                   '--params', 'params_pseudo_backprop.json'],
-                                  stdout=out_file, stderr=out_file,
-                                  shell=False)
+                                 stdout=out_file, stderr=out_file,
+                                 shell=False)
 # wait for the training
 wait_for = [p.wait() for p in (train_bp, train_fa, train_pbp)]
 logging.info('Training has finished')
@@ -67,18 +67,20 @@ with open('log_eval_train_fa.log', 'w') as out_file:
 with open('log_eval_test_pseudo_backprop.log', 'w') as out_file:
     eval_pbp_test = subprocess.Popen(['python',  '-m',
                                       'pseudo_backprop.experiments.test_mnist',
-                                     '--params', 'params_pseudo_backprop.json',
-                                     '--dataset', 'test'],
-                                    stdout=out_file, stderr=out_file,
-                                    shell=False)
-with open('log_eval_train_pseudo_backprop.log', 'w') as out_file:
-    eval_pbp_train = subprocess.Popen(['python', '-m',
-                                      'pseudo_backprop.experiments.test_mnist',
                                       '--params',
                                       'params_pseudo_backprop.json',
-                                      '--dataset', 'train'],
+                                      '--dataset', 'test'],
                                      stdout=out_file, stderr=out_file,
                                      shell=False)
+with open('log_eval_train_pseudo_backprop.log', 'w') as out_file:
+    eval_pbp_train = subprocess.Popen(
+                          ['python', '-m',
+                           'pseudo_backprop.experiments.test_mnist',
+                           '--params',
+                           'params_pseudo_backprop.json',
+                           '--dataset', 'train'],
+                          stdout=out_file, stderr=out_file,
+                          shell=False)
 wait_for = [p.wait() for p in (eval_bp_test, eval_bp_train,
                                eval_fa_test, eval_fa_train,
                                eval_pbp_test, eval_pbp_train)]
