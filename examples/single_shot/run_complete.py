@@ -15,7 +15,8 @@ logging.basicConfig(format='Running expeiments -- %(levelname)s: %(message)s',
 # start the training and wait for it
 logging.info('Running the training...')
 with open('log_train_bp.log', 'w') as out_file:
-    train_bp = subprocess.Popen(['python', '-m',
+    train_bp = subprocess.Popen(['srun', '-p', 'simulation', 'cdls',
+                                 'python', '-m',
                                  'pseudo_backprop.experiments.train_mnist',
                                  '--params', 'params_vbp.json'],
                                 stdout=out_file, stderr=out_file, shell=False)
