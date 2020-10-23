@@ -263,5 +263,5 @@ class PseudoBackpropModule(nn.Module):
 
     def _calc_pinv(self):
 
-        self.pinv = nn.Parameter(torch.pinverse(self.weight, rcond=1e-10),
+        self.pinv = nn.Parameter(torch.pinverse(self.weight, rcond=1e-15),
                                  requires_grad=False)
