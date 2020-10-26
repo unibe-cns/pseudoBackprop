@@ -12,7 +12,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
-# pylint: disable=R0914
+# pylint: disable=R0914,R0915
 def main(params):
     """
         Execute the training and save the result
