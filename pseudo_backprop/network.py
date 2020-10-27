@@ -59,7 +59,7 @@ class FullyConnectedNetwork(torch.nn.Module):
     @classmethod
     def feedback_alignement(cls, layers):
         """
-            Delegating constructor for the backprop case
+            Delegating constructor for the feedback alignement case
         """
         logging.info("Network with feedback alignement is constructed.")
         return cls(layers, FeedbackAlginementModule)
@@ -67,9 +67,9 @@ class FullyConnectedNetwork(torch.nn.Module):
     @classmethod
     def pseudo_backprop(cls, layers, pinverse_redo):
         """
-            Delegating constructor for the backprop case
+            Delegating constructor for the pseudo-backprop case
         """
-        logging.info("Network with feedback alignement is constructed.")
+        logging.info("Network with pseudo-backprop is constructed.")
         return cls(layers, PseudoBackpropModule,
                    {"pinverse_redo": pinverse_redo})
 
