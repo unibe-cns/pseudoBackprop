@@ -12,7 +12,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
-# pylint: disable=R0914,R0915
+# pylint: disable=R0914,R0915,R0912
 def main(params):
     """
         Execute the training and save the result
@@ -26,10 +26,6 @@ def main(params):
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
     momentum = params["momentum"]
-    if "pinverse_recalc" in params:
-        add_param = {"pinverse_recalc": params["pinverse_recalc"]}
-    else:
-        add_param = {}
     if "dataset" not in params:
         dataset_type = "mnist"
     else:
@@ -60,13 +56,21 @@ def main(params):
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
                           Choose from ['mnist', 'cifar10']".format(
-                                                            dataset_type))
+            dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
+    if model_type == "gen_pseudo":
+        rand_sampler = torch.utils.data.RandomSampler(trainset,
+                                                      num_samples=500000,
+                                                      replacement=True)
+        genpseudo_samp = torch.utils.data.DataLoader(trainset, batch_size=50,
+                                                     sampler=rand_sampler)
+        genpseudo_iterator = iter(genpseudo_samp)
+
     logging.info("Datasets are loaded")
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers, **add_param)
+    backprop_net = exp_aux.load_network(model_type, layers)
 
     # set up the optimizer and the loss function
     loss_function = torch.nn.CrossEntropyLoss()
@@ -81,6 +85,7 @@ def main(params):
                path_to_save)
 
     # train the network
+    counter = 0
     for epoch in range(epochs):  # loop over the dataset multiple times
 
         running_loss = 0.0
@@ -98,6 +103,20 @@ def main(params):
             loss_value = loss_function(outputs, labels)
             loss_value.backward()
             optimizer.step()
+
+            # redo the pseudo-inverse if applicable
+            counter += 1
+            if counter % params["pinverse_recalc"] == 0:
+                if model_type == 'pseudo_backprop':
+                    backprop_net.redo_backward_weights()
+                if model_type == 'gen_pseudo':
+                    # get a subset of the dataset
+                    logging.info('counter type called')
+                    try:
+                        sub_data = genpseudo_iterator.next()[0].view(50, -1)
+                    except StopIteration:
+                        genpseudo_iterator = iter(genpseudo_samp)
+                        sub_data = genpseudo_iterator.next()[0].view(50, -1)
 
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches

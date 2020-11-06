@@ -16,7 +16,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         Feedforward network with relu non-linearities between the modules
     """
 
-    def __init__(self, layers, synapse_module, synapse_param=None):
+    def __init__(self, layers, synapse_module, mode=None):
         """
             Initialize the network
 
@@ -33,11 +33,10 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.layers = layers
 
         # create the synapse
-        if synapse_param is None:
-            synapse_param = {}
+        if mode is not None:
+            self.mode = mode
         self.synapses = [synapse_module(self.layers[index],
-                                        self.layers[index + 1],
-                                        **synapse_param) for index in
+                                        self.layers[index + 1]) for index in
                          range(self.num_layers - 1)]
 
         # make the operations
@@ -65,13 +64,20 @@ class FullyConnectedNetwork(torch.nn.Module):
         return cls(layers, FeedbackAlginementModule)
 
     @classmethod
-    def pseudo_backprop(cls, layers, pinverse_redo):
+    def pseudo_backprop(cls, layers):
         """
             Delegating constructor for the pseudo-backprop case
         """
         logging.info("Network with pseudo-backprop is constructed.")
-        return cls(layers, PseudoBackpropModule,
-                   {"pinverse_redo": pinverse_redo})
+        return cls(layers, PseudoBackpropModule, mode='pseudo')
+
+    @classmethod
+    def gen_pseudo_backprop(cls, layers):
+        """
+            Delegating constructor for the pseudo-backprop case
+        """
+        logging.info("Network with pseudo-backprop is constructed.")
+        return cls(layers, PseudoBackpropModule, mode='gen_pseudo')
 
     def forward(self, inputs):
         """
@@ -103,3 +109,14 @@ class FullyConnectedNetwork(torch.nn.Module):
             inputs = self.operations_list[index](inputs)
 
         return inputs
+
+    def redo_backward_weights(self, dataset=None):
+        """Recalculate the backward weights according to the model
+           Do nothing if the layer has no fucntion for it.
+        """
+
+        if self.mode == 'pseudo':
+            for synapse in self.synapses:
+                synapse.redo_backward()
+        elif self.mode == 'gen_pseudo':
+            logging.info('gen_pseudo redo was called')
