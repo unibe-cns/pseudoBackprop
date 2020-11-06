@@ -1,5 +1,6 @@
 """Test the setup and evaluation of the networks."""
 import torch
+import nose
 from pseudo_backprop.network import FullyConnectedNetwork
 
 
@@ -20,6 +21,16 @@ class TestClassBackprop:
     def forward_bpnetwork_test(self):
         """Make a forward pass through the network!"""
         self.backprop_net(self.random_input)
+
+    def forward_to_hidden_test(self):
+        """
+        Make a forward pass until a given hideen layer, and
+        return the hidden activities.
+        """
+        for index in range(5):
+            hidden_act = self.backprop_net.forward_to_hidden(self.random_input,
+                                                             index)
+            nose.tools.eq_(hidden_act.size()[1], self.layers[index])
 
     def backward_bpnetwork_test(self):
         """Make a backward pass to calculate the gradients!"""
@@ -51,6 +62,7 @@ class TestClassFeedbackAlignement:
         out = self.fa_net(self.random_input)
         self.fa_net.zero_grad()
         out.backward(self.random_output)
+
 
 class TestClassPseudoBackpropagation:
     """

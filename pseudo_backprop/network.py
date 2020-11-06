@@ -41,12 +41,12 @@ class FullyConnectedNetwork(torch.nn.Module):
                          range(self.num_layers - 1)]
 
         # make the operations
-        self.operations = []
+        self.operations_list = []
         for synapse in self.synapses:
-            self.operations.append(synapse)
-            self.operations.append(torch.nn.LeakyReLU(negative_slope=0.05,
-                                                      inplace=True))
-        self.operations = torch.nn.Sequential(*self.operations)
+            self.operations_list.append(synapse)
+            self.operations_list.append(torch.nn.LeakyReLU(negative_slope=0.05,
+                                                           inplace=True))
+        self.operations = torch.nn.Sequential(*self.operations_list)
 
     @classmethod
     def backprop(cls, layers):
@@ -79,3 +79,27 @@ class FullyConnectedNetwork(torch.nn.Module):
         """
 
         return self.operations(inputs)
+
+    def forward_to_hidden(self, inputs, layer):
+        """
+        Make a forward pass on the inputs to the layer-th
+        evaluation
+
+        Args:
+            inputs (tensor): tensor of inputs
+            layer (int): layer number, if layer==0 then the
+                         input is returned
+
+        Returns:
+            tensor: Activities in the layer-th layer
+        """
+
+        if layer == 0:
+            return inputs
+
+        # each layer is a combination of a matrix vector multiplication
+        # and a non-linearity
+        for index in range(2 * layer):
+            inputs = self.operations_list[index](inputs)
+
+        return inputs
