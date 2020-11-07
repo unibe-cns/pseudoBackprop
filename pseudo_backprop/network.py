@@ -5,6 +5,7 @@ import logging
 import torch
 from pseudo_backprop.layers import FeedbackAlginementModule
 from pseudo_backprop.layers import PseudoBackpropModule
+from pseudo_backprop import aux
 
 logging.basicConfig(format='Network modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
@@ -120,3 +121,10 @@ class FullyConnectedNetwork(torch.nn.Module):
                 synapse.redo_backward()
         elif self.mode == 'gen_pseudo':
             logging.info('gen_pseudo redo was called')
+            for index, synapse in enumerate(self.synapses):
+                logging.info(f'Working on index: {index}')
+                w_forward = synapse.get_forward()
+                input_data = self.forward_to_hidden(dataset.detach(), index)
+                b_backward = aux.generalized_pseudo(w_forward.detach().numpy(),
+                                                    input_data)
+                synapse.set_backward(b_backward)

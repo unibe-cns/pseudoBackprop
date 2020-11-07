@@ -46,8 +46,8 @@ def generalized_pseudo(w_matrix, dataset):
         dataset (torch.tensor): dataset
     """
 
-    np_dataset = dataset.numpy()
-    covariance = np.cov(np_dataset)
+    np_dataset = dataset.detach().numpy()
+    covariance = np.cov(np_dataset.T)
     # make the singular value decomposition
     u_matrix, s_matrix, vh_matrix = np.linalg.svd(covariance)
     # Calculate the generalized pseudoinverse

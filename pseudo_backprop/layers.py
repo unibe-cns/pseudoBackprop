@@ -246,11 +246,6 @@ class PseudoBackpropModule(nn.Module):
         """
             Method to calculate the forward processing through the synapses
         """
-        # the forward calcualtion of the module
-        # self.counter += 1
-        # if self.counter == self.pinverse_redo:
-        #    self._calc_pinv()
-        #    self.counter = 0
 
         return FeedbackAlignmentLinearity.apply(input_tensor,
                                                 self.weight,
@@ -258,21 +253,23 @@ class PseudoBackpropModule(nn.Module):
                                                 self.bias)
 
     def redo_backward(self):
-
+        """Recalculate the matrix that is used for the backwards direction
+        """
         logging.debug('Redo backward called')
-        self.pinv = nn.Parameter(torch.pinverse(self.weight, rcond=1e-15),
+        self.pinv = nn.Parameter(torch.pinverse(self.weight.detach(),
+                                                rcond=1e-15),
                                  requires_grad=False)
 
-    def _set_backward(self, backward):
+    def set_backward(self, backward):
         """Set the backward synapses from the outside
 
         Args:
             backward (torch.tensor): Description
         """
 
-        self.pinv = nn.Parameter(backward, requires_grad=False)
+        self.pinv = nn.Parameter(backward.float(), requires_grad=False)
 
-    def _get_forward(self):
+    def get_forward(self):
         """Get the forward weights
 
         Returns:

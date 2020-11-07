@@ -63,8 +63,10 @@ def main(params):
         rand_sampler = torch.utils.data.RandomSampler(trainset,
                                                       num_samples=500000,
                                                       replacement=True)
-        genpseudo_samp = torch.utils.data.DataLoader(trainset, batch_size=50,
-                                                     sampler=rand_sampler)
+        genpseudo_samp = torch.utils.data.DataLoader(
+            trainset,
+            batch_size=params["gen_samples"],
+            sampler=rand_sampler)
         genpseudo_iterator = iter(genpseudo_samp)
 
     logging.info("Datasets are loaded")
@@ -91,6 +93,25 @@ def main(params):
         running_loss = 0.0
         logging.info(f'Working on epoch {epoch + 1}')
         for index, data in enumerate(tqdm(trainloader), 0):
+            # redo the pseudo-inverse if applicable
+            if counter % params["pinverse_recalc"] == 0:
+                if model_type == 'pseudo_backprop':
+                    with torch.no_grad():
+                        backprop_net.redo_backward_weights()
+                if model_type == 'gen_pseudo':
+                    # get a subset of the dataset
+                    logging.info('counter type called')
+                    try:
+                        sub_data = genpseudo_iterator.next()[0].view(
+                            params["gen_samples"], -1)
+                    except StopIteration:
+                        genpseudo_iterator = iter(genpseudo_samp)
+                        sub_data = genpseudo_iterator.next()[0].view(
+                            params["gen_samples"], -1)
+                    with torch.no_grad():
+                        backprop_net.redo_backward_weights(dataset=sub_data)
+            counter += 1
+
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             inputs = inputs.view(batch_size, -1)
@@ -103,20 +124,6 @@ def main(params):
             loss_value = loss_function(outputs, labels)
             loss_value.backward()
             optimizer.step()
-
-            # redo the pseudo-inverse if applicable
-            counter += 1
-            if counter % params["pinverse_recalc"] == 0:
-                if model_type == 'pseudo_backprop':
-                    backprop_net.redo_backward_weights()
-                if model_type == 'gen_pseudo':
-                    # get a subset of the dataset
-                    logging.info('counter type called')
-                    try:
-                        sub_data = genpseudo_iterator.next()[0].view(50, -1)
-                    except StopIteration:
-                        genpseudo_iterator = iter(genpseudo_samp)
-                        sub_data = genpseudo_iterator.next()[0].view(50, -1)
 
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches
