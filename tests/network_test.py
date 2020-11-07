@@ -74,7 +74,7 @@ class TestClassPseudoBackpropagation:
     def setup_class(cls):
         """Set up an architecture and create a network!"""
         cls.layers = [200, 300, 320, 300, 10]
-        cls.fa_net = FullyConnectedNetwork.pseudo_backprop(cls.layers, 2)
+        cls.fa_net = FullyConnectedNetwork.pseudo_backprop(cls.layers)
         cls.random_input = torch.randn(1, 200)
         cls.random_output = torch.randn(1, 10)
 

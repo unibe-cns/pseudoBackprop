@@ -124,7 +124,8 @@ class FullyConnectedNetwork(torch.nn.Module):
             for index, synapse in enumerate(self.synapses):
                 logging.info(f'Working on index: {index}')
                 w_forward = synapse.get_forward()
-                input_data = self.forward_to_hidden(dataset.detach(), index)
+                input_data = self.forward_to_hidden(dataset,
+                                                    index)
                 b_backward = aux.generalized_pseudo(w_forward.detach().numpy(),
                                                     input_data)
                 synapse.set_backward(b_backward)

@@ -20,7 +20,7 @@ def gen_pseudo_test():
     n_samples = 400
 
     w_matrix = torch.rand(d_out, d_in)
-    dataset = torch.rand(d_in, n_samples)
+    dataset = torch.rand(n_samples, d_in)
     gen_pseudo = aux.generalized_pseudo(w_matrix, dataset)
 
     # make the test
