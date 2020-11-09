@@ -51,8 +51,9 @@ def main(args):
     """
     # prepare for loading
     data = {}
-    names = ['bp', 'fa', 'pseudo_bp']
-    cases = [args.params_vbp, args.params_fa, args.params_pseudo]
+    names = ['bp', 'fa', 'pseudo_bp', "gen_pseudo"]
+    cases = [args.params_vbp, args.params_fa, args.params_pseudo,
+             args.params_gen_pseudo]
 
     # Load the resutls
     for name, case in zip(names, cases):
@@ -67,6 +68,7 @@ def main(args):
         visu.single_shot(axes[index], feedback_a=data['fa'][mode],
                          backprop=data['bp'][mode],
                          pseudo=data['pseudo_bp'][mode],
+                         gen_pseudo=data['gen_pseudo'][mode],
                          y_type=y_label)
 
     fig.savefig('results.png')
@@ -81,6 +83,8 @@ if __name__ == '__main__':
                         help='Path to the feedback alignement parameter json.')
     PARSER.add_argument('--params_pseudo', type=str, default=None,
                         help='Path to the pseudo backprop parameter json.')
+    PARSER.add_argument('--params_gen_pseudo', type=str, default=None,
+                        help='Path to the gen-pseudo backprop parameter json.')
     ARGS = PARSER.parse_args()
 
     main(ARGS)

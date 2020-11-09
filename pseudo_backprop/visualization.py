@@ -8,8 +8,10 @@ mpl.rc_file(os.path.join(dir_path, "defaults/plotstyle"))
 
 COLORS = {"vanilla backprop": "tab:blue",
           "feedback alignement": "tab:orange",
-          "pseudo-backprop": "tab:green"}
-NAMES = ["vanilla backprop", "feedback alignement", "pseudo-backprop"]
+          "pseudo-backprop": "tab:green",
+          "gen-pseudo": "tab:red"}
+NAMES = ["vanilla backprop", "feedback alignement", "pseudo-backprop",
+         "gen-pseudo"]
 
 
 def prepare_axes(axes):
@@ -25,8 +27,9 @@ def prepare_axes(axes):
     axes.set_yscale('log')
 
 
+# pylint: disable=R0913
 def single_shot(axes, backprop=None, feedback_a=None, pseudo=None,
-                y_type="Loss"):
+                gen_pseudo=None, y_type="Loss"):
     """
     Plot a single shot experiment
 
@@ -35,6 +38,7 @@ def single_shot(axes, backprop=None, feedback_a=None, pseudo=None,
         backprop (None, optional): loss/error ratio for vanilla backprop
         fa (None, optional): loss/error ratio for feedback alignement
         pseudo (None, optional): loss/error ratio for pseudo backprop
+        gen_pseudo (None, optional): loss/error ratio for gen-pseudo backprop
         type (str, optional): label on the y-axeses
 
     Returns:
@@ -43,7 +47,7 @@ def single_shot(axes, backprop=None, feedback_a=None, pseudo=None,
     """
     prepare_axes(axes)
 
-    for item, name in zip([backprop, feedback_a, pseudo], NAMES):
+    for item, name in zip([backprop, feedback_a, pseudo, gen_pseudo], NAMES):
         if item is not None:
             axes.plot(item[:, 0], item[:, 1], linewidth=2, color=COLORS[name],
                       label=name)
