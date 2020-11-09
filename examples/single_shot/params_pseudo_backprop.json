@@ -7,5 +7,6 @@
     "learning_rate": 0.001,
     "momentum": 0.9,
     "random_seed": 456732,
-    "pinverse_recalc": 100
+    "pinverse_recalc": 100,
+    "dataset_path": "../../dataset/mnist"
 }

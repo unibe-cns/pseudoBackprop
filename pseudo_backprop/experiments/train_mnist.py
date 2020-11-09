@@ -12,7 +12,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
-# pylint: disable=R0914,R0915,R0912
+# pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
     """
         Execute the training and save the result
@@ -46,11 +46,13 @@ def main(params):
     # get the dataset
     logging.info("Loading the datasets")
     if dataset_type == "cifar10":
-        trainset = torchvision.datasets.CIFAR10('./data', train=True,
+        trainset = torchvision.datasets.CIFAR10(params["dataset_path"],
+                                                train=True,
                                                 download=True,
                                                 transform=transform)
     elif dataset_type == "mnist":
-        trainset = torchvision.datasets.MNIST('./data', train=True,
+        trainset = torchvision.datasets.MNIST(params["dataset_path"],
+                                              train=True,
                                               download=True,
                                               transform=transform)
     else:
@@ -94,23 +96,25 @@ def main(params):
         logging.info(f'Working on epoch {epoch + 1}')
         for index, data in enumerate(tqdm(trainloader), 0):
             # redo the pseudo-inverse if applicable
-            if counter % params["pinverse_recalc"] == 0:
-                if model_type == 'pseudo_backprop':
-                    with torch.no_grad():
-                        backprop_net.redo_backward_weights()
-                if model_type == 'gen_pseudo':
-                    # get a subset of the dataset
-                    logging.info('counter type called')
-                    try:
-                        sub_data = genpseudo_iterator.next()[0].view(
-                            params["gen_samples"], -1)
-                    except StopIteration:
-                        genpseudo_iterator = iter(genpseudo_samp)
-                        sub_data = genpseudo_iterator.next()[0].view(
-                            params["gen_samples"], -1)
-                    with torch.no_grad():
-                        backprop_net.redo_backward_weights(dataset=sub_data)
-            counter += 1
+            if model_type in ["pseudo_backprop", "gen_pseudo"]:
+                if counter % params["pinverse_recalc"] == 0:
+                    if model_type == 'pseudo_backprop':
+                        with torch.no_grad():
+                            backprop_net.redo_backward_weights()
+                    if model_type == 'gen_pseudo':
+                        # get a subset of the dataset
+                        logging.info('counter type called')
+                        try:
+                            sub_data = genpseudo_iterator.next()[0].view(
+                                params["gen_samples"], -1)
+                        except StopIteration:
+                            genpseudo_iterator = iter(genpseudo_samp)
+                            sub_data = genpseudo_iterator.next()[0].view(
+                                params["gen_samples"], -1)
+                        with torch.no_grad():
+                            backprop_net.redo_backward_weights(
+                                            dataset=sub_data)
+                counter += 1
 
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
