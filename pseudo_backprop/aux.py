@@ -36,3 +36,22 @@ def evaluate_model(network_model, testloader, batch_size):
                 confusion_matrix[tested] += 1
 
     return loss, confusion_matrix
+
+
+def generalized_pseudo(w_matrix, dataset):
+    """calculate the generalized dataset
+
+    Args:
+        w_matrix (torch.tensor): forward matrix
+        dataset (torch.tensor): dataset
+    """
+
+    np_dataset = dataset.detach().numpy()
+    covariance = np.cov(np_dataset.T)
+    # make the singular value decomposition
+    u_matrix, s_matrix, vh_matrix = np.linalg.svd(covariance)
+    # Calculate the generalized pseudoinverse
+    gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
+    gen_pseudo = np.dot(gamma, np.linalg.pinv(np.dot(w_matrix, gamma)))
+
+    return torch.from_numpy(gen_pseudo)

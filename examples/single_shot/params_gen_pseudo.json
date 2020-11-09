@@ -3,9 +3,10 @@
     "layers": [784, 800, 10],
     "epochs": 10,
     "model_folder": "model_pseudo",
-    "model_type": "pseudo_backprop",
+    "model_type": "gen_pseudo",
     "learning_rate": 0.001,
     "momentum": 0.9,
     "random_seed": 456732,
-    "pinverse_recalc": 100
+    "pinverse_recalc": 1000,
+    "gen_samples": 60000
 }
