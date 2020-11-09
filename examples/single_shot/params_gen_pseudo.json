@@ -8,5 +8,6 @@
     "momentum": 0.9,
     "random_seed": 456732,
     "pinverse_recalc": 1000,
-    "gen_samples": 60000
+    "gen_samples": 60000,
+    "dataset_path": "../../dataset/mnist"
 }

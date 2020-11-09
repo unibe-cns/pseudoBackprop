@@ -32,12 +32,12 @@ def main(params, dataset):
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize(0.5, 0.5)])
     if dataset_type == "cifar10":
-        testset = torchvision.datasets.CIFAR10('./data',
+        testset = torchvision.datasets.CIFAR10(params["dataset_path"],
                                                train=(dataset == 'train'),
                                                download=True,
                                                transform=transform)
     elif dataset_type == "mnist":
-        testset = torchvision.datasets.MNIST('./data',
+        testset = torchvision.datasets.MNIST(params["dataset_path"],
                                              train=(dataset == 'train'),
                                              download=True,
                                              transform=transform)

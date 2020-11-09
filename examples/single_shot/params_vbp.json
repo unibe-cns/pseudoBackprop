@@ -6,5 +6,6 @@
     "model_type": "backprop",
     "learning_rate": 0.001,
     "momentum": 0.9,
-    "random_seed": 456732
+    "random_seed": 456732,
+    "dataset_path": "../../dataset/mnist"
 }
