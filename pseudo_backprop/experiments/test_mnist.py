@@ -28,6 +28,10 @@ def main(params, dataset):
     else:
         dataset_type = params["dataset"]
 
+    # look for device, use gpu if available
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    logging.info(f'The training starts on device {device}.')
+
     # Load the model and the data
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize(0.5, 0.5)])
@@ -49,6 +53,7 @@ def main(params, dataset):
 
     # make the networks
     backprop_net = exp_aux.load_network(model_type, layers)
+    backprop_net.to(device)
 
     # every 10000 images there is a saved model, hence we have to take into
     # account that MNIST has 60 000 images and CIFAR10 50 000
@@ -71,7 +76,7 @@ def main(params, dataset):
         backprop_net.load_state_dict(torch.load(path_to_model))
         # Evaluate the model
         loss, confusion_matrix = evaluate_model(backprop_net, testloader,
-                                                batch_size)
+                                                batch_size, device)
         class_ratio = (confusion_matrix.diagonal().sum() /
                        confusion_matrix.sum())
         loss_array.append(loss)
