@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 
-def evaluate_model(network_model, testloader, batch_size):
+def evaluate_model(network_model, testloader, batch_size, device='cpu'):
     """
     Evaluate the model on the given dataset and obtain the loss function and
     the results
@@ -13,6 +13,7 @@ def evaluate_model(network_model, testloader, batch_size):
                        network
         testloader: the testloader object from torch
         batch_size: batch size
+        device (str, optional): 'gpu' or 'cpu' according to the availability
 
     Returns:
         loss: the computed loss value
@@ -25,7 +26,7 @@ def evaluate_model(network_model, testloader, batch_size):
     # turn off gathering the gradient for testing
     with torch.no_grad():
         for data in testloader:
-            images, labels = data
+            images, labels = data[0].to(device), data[1].to(device)
             images = images.view(batch_size, -1)
             outputs = network_model(images)
             loss_value = loss_function(outputs, labels)

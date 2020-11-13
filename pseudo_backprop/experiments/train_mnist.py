@@ -34,6 +34,10 @@ def main(params):
     # set random seed
     torch.manual_seed(params["random_seed"])
 
+    # look for gpu device, use gpu if available
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    logging.info(f'The training starts on device {device}.')
+
     # set-up the folder to save the model
     if not os.path.exists(model_folder):
         os.makedirs(model_folder)
@@ -76,6 +80,7 @@ def main(params):
 
     # make the networks
     backprop_net = exp_aux.load_network(model_type, layers)
+    backprop_net.to(device)
 
     # set up the optimizer and the loss function
     loss_function = torch.nn.CrossEntropyLoss()
@@ -111,14 +116,14 @@ def main(params):
                         except StopIteration:
                             genpseudo_iterator = iter(genpseudo_samp)
                             sub_data = genpseudo_iterator.next()[0].view(
-                                params["gen_samples"], -1)
+                                params["gen_samples"], -1).to(device)
                         with torch.no_grad():
                             backprop_net.redo_backward_weights(
                                 dataset=sub_data)
                 counter += 1
 
             # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
+            inputs, labels = data[0].to(device), data[1].to(device)
             inputs = inputs.view(batch_size, -1)
 
             # zero the parameter gradients
