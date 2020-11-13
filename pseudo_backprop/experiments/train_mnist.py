@@ -62,9 +62,10 @@ def main(params):
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
     if model_type == "gen_pseudo":
-        rand_sampler = torch.utils.data.RandomSampler(trainset,
-                                                      num_samples=500000,
-                                                      replacement=True)
+        rand_sampler = torch.utils.data.RandomSampler(
+            trainset,
+            num_samples=params["gen_samples"],
+            replacement=True)
         genpseudo_samp = torch.utils.data.DataLoader(
             trainset,
             batch_size=params["gen_samples"],
@@ -113,7 +114,7 @@ def main(params):
                                 params["gen_samples"], -1)
                         with torch.no_grad():
                             backprop_net.redo_backward_weights(
-                                            dataset=sub_data)
+                                dataset=sub_data)
                 counter += 1
 
             # get the inputs; data is a list of [inputs, labels]
