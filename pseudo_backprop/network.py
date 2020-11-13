@@ -129,3 +129,23 @@ class FullyConnectedNetwork(torch.nn.Module):
                 b_backward = aux.generalized_pseudo(w_forward.detach().numpy(),
                                                     input_data)
                 synapse.set_backward(b_backward)
+
+    def get_forward_weights(self):
+        """Get a copy of the forward weights"""
+
+        forward_weights = []
+        for _, synapse in enumerate(self.synapses):
+            weights = synapse.get_forward().detach().numpy().copy()
+            forward_weights.append(weights)
+
+        return forward_weights
+
+    def get_backward_weights(self):
+        """Get a copy of the backward weights"""
+
+        forward_weights = []
+        for _, synapse in enumerate(self.synapses):
+            weights = synapse.get_backward().detach().numpy().copy()
+            forward_weights.append(weights)
+
+        return forward_weights

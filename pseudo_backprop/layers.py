@@ -277,3 +277,12 @@ class PseudoBackpropModule(nn.Module):
         """
 
         return self.weight
+
+    def get_backward(self):
+        """Get the forward weights
+
+        Returns:
+            torch.tensor: The backward weights
+        """
+
+        return self.pinv
