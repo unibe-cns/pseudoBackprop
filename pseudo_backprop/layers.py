@@ -270,10 +270,19 @@ class PseudoBackpropModule(nn.Module):
         self.pinv = nn.Parameter(backward.float(), requires_grad=False)
 
     def get_forward(self):
-        """Get the forward weights
+        """Get a detached clone of the forward weights
 
         Returns:
             torch.tensor: The forward weights
         """
 
-        return self.weight
+        return self.weight.clone().detach()
+
+    def get_backward(self):
+        """Get a detached clone of the forward weights
+
+        Returns:
+            torch.tensor: The backward weights
+        """
+
+        return self.pinv.clone().detach()

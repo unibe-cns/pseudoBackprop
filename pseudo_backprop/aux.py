@@ -55,3 +55,21 @@ def generalized_pseudo(w_matrix, dataset):
     gen_pseudo = np.dot(gamma, np.linalg.pinv(np.dot(w_matrix, gamma)))
 
     return torch.from_numpy(gen_pseudo)
+
+
+def calc_loss(b_matrix, w_matrix, samples):
+    """Calculate the loss based on the samples
+    Args:
+        b_matrix (np.ndarray): The backward matrix
+        w_matrix (np.ndarray): The forward matrix
+        samples : Samples to calcualte over
+    Returns:
+        float: the calculated loss
+    """
+    b_matrix = np.reshape(b_matrix, w_matrix.T.shape)
+    bw_product = b_matrix.dot(w_matrix.dot(samples))
+    diff = samples - bw_product
+    f_samples = np.sum(np.power(diff, 2), axis=0)
+    loss = np.mean(f_samples)
+
+    return loss
