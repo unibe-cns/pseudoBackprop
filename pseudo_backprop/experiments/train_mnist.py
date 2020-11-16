@@ -112,7 +112,7 @@ def main(params):
                         logging.info('counter type called')
                         try:
                             sub_data = genpseudo_iterator.next()[0].view(
-                                params["gen_samples"], -1)
+                                params["gen_samples"], -1).to(device)
                         except StopIteration:
                             genpseudo_iterator = iter(genpseudo_samp)
                             sub_data = genpseudo_iterator.next()[0].view(
