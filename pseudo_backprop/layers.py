@@ -272,7 +272,7 @@ class PseudoBackpropModule(nn.Module):
         """
 
         self.pinv = nn.Parameter(
-            backward.float(), requires_grad=False).to(self.device)
+            backward.float(), requires_grad=False)
         logging.debug('Push the backward weights to f{self.device}')
 
     def get_forward(self):
