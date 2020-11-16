@@ -222,10 +222,6 @@ class PseudoBackpropModule(nn.Module):
         else:
             logging.info('Bias is deactivated.')
 
-        # look for gpu device, use gpu if available
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu")
-
         # create the parameters
         self.weight = nn.Parameter(torch.Tensor(self.output_size,
                                                 self.input_size),
@@ -273,7 +269,6 @@ class PseudoBackpropModule(nn.Module):
 
         self.pinv = nn.Parameter(
             backward.float(), requires_grad=False)
-        logging.debug('Push the backward weights to f{self.device}')
 
     def get_forward(self):
         """Get a detached clone of the forward weights
