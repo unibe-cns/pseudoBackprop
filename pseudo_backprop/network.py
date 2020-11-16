@@ -40,6 +40,10 @@ class FullyConnectedNetwork(torch.nn.Module):
                                         self.layers[index + 1]) for index in
                          range(self.num_layers - 1)]
 
+        # look for gpu device, use gpu if available
+        self.device = torch.device(
+            "cuda:0" if torch.cuda.is_available() else "cpu")
+
         # make the operations
         self.operations_list = []
         for synapse in self.synapses:
@@ -126,8 +130,9 @@ class FullyConnectedNetwork(torch.nn.Module):
                 w_forward = synapse.get_forward()
                 input_data = self.forward_to_hidden(dataset,
                                                     index)
-                b_backward = aux.generalized_pseudo(w_forward.detach().numpy(),
-                                                    input_data)
+                b_backward = aux.generalized_pseudo(
+                                    w_forward.detach().cpu().numpy(),
+                                    input_data).to(self.device)
                 synapse.set_backward(b_backward)
 
     def get_forward_weights(self):

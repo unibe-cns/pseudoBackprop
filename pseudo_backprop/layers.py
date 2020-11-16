@@ -109,7 +109,7 @@ class FeedbackAlginementModule(nn.Module):
             self.register_buffer('bias', None)
 
         # create a variable for the random feedback weights
-        self.weight_back = torch.autograd.Variable(
+        self.weight_back = nn.Parameter(
             torch.FloatTensor(self.output_size,
                               self.input_size),
             requires_grad=False)
@@ -267,7 +267,8 @@ class PseudoBackpropModule(nn.Module):
             backward (torch.tensor): Description
         """
 
-        self.pinv = nn.Parameter(backward.float(), requires_grad=False)
+        self.pinv = nn.Parameter(
+            backward.float(), requires_grad=False)
 
     def get_forward(self):
         """Get a detached clone of the forward weights
