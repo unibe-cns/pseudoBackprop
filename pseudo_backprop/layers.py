@@ -271,8 +271,9 @@ class PseudoBackpropModule(nn.Module):
             backward (torch.tensor): Description
         """
 
-        self.pinv = nn.Parameter(backward.float(), requires_grad=False)
-        self.pinv.to(self.device)
+        self.pinv = nn.Parameter(
+            backward.float(), requires_grad=False).to(self.device)
+        logging.debug('Push the backward weights to f{self.device}')
 
     def get_forward(self):
         """Get a detached clone of the forward weights
