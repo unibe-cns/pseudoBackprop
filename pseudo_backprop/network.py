@@ -57,7 +57,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         """
             Delegating constructor for the backprop case
         """
-        logging.info("Network with backpropagation is constructed.")
+        logging.info("Network with vanilla backpropagation is constructed.")
         return cls(layers, torch.nn.Linear)
 
     @classmethod
@@ -79,9 +79,10 @@ class FullyConnectedNetwork(torch.nn.Module):
     @classmethod
     def gen_pseudo_backprop(cls, layers):
         """
-            Delegating constructor for the pseudo-backprop case
+            Delegating constructor for the generalized pseudo-backprop case
         """
-        logging.info("Network with pseudo-backprop is constructed.")
+        logging.info(
+            "Network with generalized pseudo-backprop is constructed.")
         return cls(layers, PseudoBackpropModule, mode='gen_pseudo')
 
     def forward(self, inputs):
