@@ -126,8 +126,9 @@ class FullyConnectedNetwork(torch.nn.Module):
                 w_forward = synapse.get_forward()
                 input_data = self.forward_to_hidden(dataset,
                                                     index)
-                b_backward = aux.generalized_pseudo(w_forward.detach().numpy(),
-                                                    input_data)
+                b_backward = aux.generalized_pseudo(
+                                    w_forward.cpu().detach().numpy(),
+                                    input_data)
                 synapse.set_backward(b_backward)
 
     def get_forward_weights(self):
