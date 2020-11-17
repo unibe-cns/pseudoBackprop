@@ -32,8 +32,9 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu'):
             loss_value = loss_function(outputs, labels)
             loss += loss_value
             _, predicted = torch.max(outputs, 1)
-            for tested in zip(labels.numpy().astype(int),
-                              predicted.numpy().astype(int)):
+            for tested in \
+                zip(labels.clone().detach().cpu().numpy().astype(int),
+                    predicted.clone().detach().cpu().numpy().astype(int)):
                 confusion_matrix[tested] += 1
 
     return loss, confusion_matrix
