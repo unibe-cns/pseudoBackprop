@@ -1,11 +1,12 @@
 {
-    "batch_size": 10,
-    "layers": [784, 800, 10],
-    "epochs": 10,
+    "batch_size": 20,
+    "layers": [784, 1000, 10],
+    "epochs": 5,
     "model_folder": "model_fa",
     "model_type": "fa",
     "learning_rate": 0.001,
-    "momentum": 0.9,
+    "momentum": 0.0,
+    "weight_decay": 0.000001,
     "random_seed": 456732,
     "dataset_path": "../../dataset/mnist"
 }
