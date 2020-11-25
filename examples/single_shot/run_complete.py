@@ -85,7 +85,7 @@ wait_for = [p.wait() for p in (eval_bp_test, eval_bp_train,
 logging.info('Evaluation has finished')
 
 logging.info('Start the plotting...')
-plot_call = ['python',  '-m', 'pseudo_backprop.experiments.test_mnist',
+plot_call = ['python',  '-m', 'pseudo_backprop.experiments.plot_mnist_results',
              '--params_vbp', 'params_vbp.json',
              '--params_fa', 'params_fa.json',
              '--params_pseudo', 'params_pseudo_backprop.json']
