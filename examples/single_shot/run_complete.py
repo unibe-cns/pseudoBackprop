@@ -30,8 +30,15 @@ with open('log_train_pseudo.log', 'w') as out_file:
                                   '--params', 'params_pseudo_backprop.json'],
                                   stdout=out_file, stderr=out_file,
                                   shell=False)
+with open('log_train_gen_pseudo.log', 'w') as out_file:
+    train_gen = subprocess.Popen(['python', '-m',
+                                  'pseudo_backprop.experiments.train_mnist',
+                                  '--params', 'params_gen_pseudo.json'],
+                                  stdout=out_file, stderr=out_file,
+                                  shell=False)
+
 # wait for the training
-wait_for = [p.wait() for p in (train_bp, train_fa, train_pbp)]
+wait_for = [p.wait() for p in (train_bp, train_fa, train_pbp, train_gen)]
 logging.info('Training has finished')
 
 # start the evaluation and wait for it to finish
@@ -79,15 +86,32 @@ with open('log_eval_train_pseudo_backprop.log', 'w') as out_file:
                                       '--dataset', 'train'],
                                      stdout=out_file, stderr=out_file,
                                      shell=False)
+with open('log_eval_test_gen_pseudo.log', 'w') as out_file:
+    eval_gen_test = subprocess.Popen(['python',  '-m',
+                                      'pseudo_backprop.experiments.test_mnist',
+                                     '--params', 'params_gen_pseudo.json',
+                                     '--dataset', 'test'],
+                                    stdout=out_file, stderr=out_file,
+                                    shell=False)
+with open('log_eval_train_gen_pseudo.log', 'w') as out_file:
+    eval_gen_train = subprocess.Popen(['python', '-m',
+                                      'pseudo_backprop.experiments.test_mnist',
+                                      '--params',
+                                      'params_gen_pseudo.json',
+                                      '--dataset', 'train'],
+                                     stdout=out_file, stderr=out_file,
+                                     shell=False)
 wait_for = [p.wait() for p in (eval_bp_test, eval_bp_train,
                                eval_fa_test, eval_fa_train,
-                               eval_pbp_test, eval_pbp_train)]
+                               eval_pbp_test, eval_pbp_train,
+                               eval_gen_test, eval_gen_train)]
 logging.info('Evaluation has finished')
 
 logging.info('Start the plotting...')
 plot_call = ['python',  '-m', 'pseudo_backprop.experiments.plot_mnist_results',
              '--params_vbp', 'params_vbp.json',
              '--params_fa', 'params_fa.json',
-             '--params_pseudo', 'params_pseudo_backprop.json']
+             '--params_pseudo', 'params_pseudo_backprop.json',
+             '--params_gen_pseudo', 'params_gen_pseudo.json']
 subprocess.Popen(plot_call, shell=False)
 logging.info('The plotting has finished')
