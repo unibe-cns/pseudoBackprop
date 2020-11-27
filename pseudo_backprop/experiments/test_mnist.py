@@ -19,7 +19,7 @@ def main(params, dataset):
     """Run the testing on the mnist dataset."""
     # The metaparameter
     layers = params['layers']
-    batch_size = 25 # for training this is optimized for speed
+    batch_size = 25  # for training this is optimized for speed
     model_type = params['model_type']
     model_folder = params["model_folder"]
     epochs = params["epochs"]

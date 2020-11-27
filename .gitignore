@@ -137,3 +137,9 @@ dmypy.json
 *ubyte
 *.pth
 *.csv
+*.txt
+*.json
+*.meta
+*.html
+data_batch_?
+test_batch
