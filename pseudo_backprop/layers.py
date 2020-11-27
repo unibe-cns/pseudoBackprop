@@ -4,6 +4,7 @@
 """
 import logging
 import torch
+import numpy as np
 from torch import nn
 
 logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
@@ -115,12 +116,13 @@ class FeedbackAlginementModule(nn.Module):
             requires_grad=False)
 
         # Initialize the weights
-        torch.nn.init.kaiming_normal_(self.weight, mode='fan_in',
-                                      nonlinearity='relu')
-        torch.nn.init.kaiming_normal_(self.weight_back, mode='fan_in',
-                                      nonlinearity='relu')
+        k_init = np.sqrt(1/self.input_size)
+        torch.nn.init.uniform_(self.weight, a=-1*k_init,
+                               b=k_init)
+        torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
+                               b=k_init)
         if bias:
-            torch.nn.init.normal_(self.bias)
+            torch.nn.init.uniform_(self.bias, a=-1*k_init, b=k_init)
 
     def forward(self, input_tensor):
         """
@@ -235,12 +237,15 @@ class PseudoBackpropModule(nn.Module):
             self.register_buffer('bias', None)
 
         # Initialize the weights
-        torch.nn.init.kaiming_normal_(self.weight, mode='fan_in',
-                                      nonlinearity='relu')
+        k_init = np.sqrt(1/self.input_size)
+        torch.nn.init.uniform_(self.weight, a=-1*k_init,
+                               b=k_init)
+
         self.pinv = nn.Parameter(torch.pinverse(self.weight),
                                  requires_grad=False)
         if bias:
-            torch.nn.init.normal_(self.bias)
+            torch.nn.init.uniform_(self.bias, a=-1*k_init,
+                                   b=k_init)
 
     def forward(self, input_tensor):
         """
