@@ -26,6 +26,7 @@ def main(params):
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
     momentum = params["momentum"]
+    weight_decay = params["weight_decay"]
     if "dataset" not in params:
         dataset_type = "mnist"
     else:
@@ -45,7 +46,7 @@ def main(params):
     # set up the normalizer
     # Normalize the images to
     transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize(0.5, 0.5)])
+                                    transforms.Normalize(0.0, 1.0)])
 
     # get the dataset
     logging.info("Loading the datasets")
@@ -85,7 +86,8 @@ def main(params):
     # set up the optimizer and the loss function
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
-        backprop_net.parameters(), lr=learning_rate, momentum=momentum)
+        backprop_net.parameters(), lr=learning_rate, momentum=momentum,
+        weight_decay=weight_decay)
 
     # save the initial network
     file_to_save = (f"model_{model_type}_epoch_0_images_"
@@ -138,7 +140,7 @@ def main(params):
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches
             running_loss += loss_value.item()
-            if index % (10000/batch_size) == 999:
+            if ((index+1) * batch_size) % 10000 == 0:
                 # print every 2000 mini-batches
                 logging.info(f'epoch {epoch}, batch {index}, \
                               loss: {running_loss}')

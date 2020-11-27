@@ -19,7 +19,7 @@ def main(params, dataset):
     """Run the testing on the mnist dataset."""
     # The metaparameter
     layers = params['layers']
-    batch_size = params['batch_size']
+    batch_size = 25  # for training this is optimized for speed
     model_type = params['model_type']
     model_folder = params["model_folder"]
     epochs = params["epochs"]
@@ -34,7 +34,7 @@ def main(params, dataset):
 
     # Load the model and the data
     transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize(0.5, 0.5)])
+                                    transforms.Normalize(0.0, 1.0)])
     if dataset_type == "cifar10":
         testset = torchvision.datasets.CIFAR10(params["dataset_path"],
                                                train=(dataset == 'train'),

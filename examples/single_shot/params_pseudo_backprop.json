@@ -1,12 +1,13 @@
 {
-    "batch_size": 10,
-    "layers": [784, 800, 10],
-    "epochs": 10,
+    "batch_size": 20,
+    "layers": [784, 1000, 10],
+    "epochs": 5,
     "model_folder": "model_pseudo",
     "model_type": "pseudo_backprop",
     "learning_rate": 0.001,
-    "momentum": 0.9,
+    "momentum": 0.0,
+    "weight_decay": 0.0,
     "random_seed": 456732,
-    "pinverse_recalc": 100,
+    "pinverse_recalc": 1000,
     "dataset_path": "../../dataset/mnist"
 }
