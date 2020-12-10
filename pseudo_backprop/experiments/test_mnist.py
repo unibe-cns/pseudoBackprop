@@ -14,7 +14,7 @@ logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 
-# pylint: disable=R0914
+# pylint: disable=R0914,R0915
 def main(params, dataset):
     """Run the testing on the mnist dataset."""
     # The metaparameter
@@ -50,6 +50,7 @@ def main(params, dataset):
                           Choose from ['mnist', 'cifar10']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
+    nb_classes = len(testset.classes)
 
     # make the networks
     backprop_net = exp_aux.load_network(model_type, layers)
@@ -76,7 +77,8 @@ def main(params, dataset):
         backprop_net.load_state_dict(torch.load(path_to_model))
         # Evaluate the model
         loss, confusion_matrix = evaluate_model(backprop_net, testloader,
-                                                batch_size, device)
+                                                batch_size, device,
+                                                nb_classes)
         class_ratio = (confusion_matrix.diagonal().sum() /
                        confusion_matrix.sum())
         loss_array.append(loss)

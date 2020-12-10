@@ -3,7 +3,8 @@ import numpy as np
 import torch
 
 
-def evaluate_model(network_model, testloader, batch_size, device='cpu'):
+def evaluate_model(network_model, testloader, batch_size, device='cpu',
+                   nb_classes=10):
     """
     Evaluate the model on the given dataset and obtain the loss function and
     the results
@@ -19,9 +20,11 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu'):
         loss: the computed loss value
         confusion_matrix: numpy matrix with the confusion matrix
     """
+    # pylint: disable=R0914
 
     confusion_matrix = np.zeros((10, 10))
-    loss_function = torch.nn.CrossEntropyLoss()
+    loss_function = torch.nn.MSELoss(reduction='sum')
+    y_onehot = torch.FloatTensor(batch_size, nb_classes)
     loss = 0
     # turn off gathering the gradient for testing
     with torch.no_grad():
@@ -29,7 +32,10 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu'):
             images, labels = data[0].to(device), data[1].to(device)
             images = images.view(batch_size, -1)
             outputs = network_model(images)
-            loss_value = loss_function(outputs, labels)
+            y_onehot.zero_()
+            unsq_label = labels.unsqueeze(1)
+            y_onehot.scatter_(1, unsq_label, 1)
+            loss_value = loss_function(outputs, y_onehot)
             loss += loss_value
             _, predicted = torch.max(outputs, 1)
             for tested in \
