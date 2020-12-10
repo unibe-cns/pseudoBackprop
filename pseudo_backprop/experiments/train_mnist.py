@@ -66,6 +66,9 @@ def main(params):
             dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
+    nb_classes = len(trainset.classes)
+    logging.info('The number of classes is %i', nb_classes)
+
     if model_type == "gen_pseudo":
         rand_sampler = torch.utils.data.RandomSampler(
             trainset,
@@ -84,7 +87,8 @@ def main(params):
     backprop_net.to(device)
 
     # set up the optimizer and the loss function
-    loss_function = torch.nn.CrossEntropyLoss()
+    y_onehot = torch.FloatTensor(batch_size, nb_classes)
+    loss_function = torch.nn.MSELoss(reduction='sum')
     optimizer = torch.optim.SGD(
         backprop_net.parameters(), lr=learning_rate, momentum=momentum,
         weight_decay=weight_decay)
@@ -132,8 +136,11 @@ def main(params):
             optimizer.zero_grad()
 
             # forward + backward + optimize
+            y_onehot.zero_()
+            unsq_label = labels.unsqueeze(1)
+            y_onehot.scatter_(1, unsq_label, 1)
             outputs = backprop_net(inputs)
-            loss_value = loss_function(outputs, labels)
+            loss_value = loss_function(outputs, y_onehot)
             loss_value.backward()
             optimizer.step()
 
