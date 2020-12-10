@@ -48,8 +48,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.operations_list = []
         for synapse in self.synapses:
             self.operations_list.append(synapse)
-            self.operations_list.append(torch.nn.LeakyReLU(negative_slope=0.05,
-                                                           inplace=True))
+            self.operations_list.append(torch.nn.ReLU(inplace=True))
         self.operations = torch.nn.Sequential(*self.operations_list)
 
     @classmethod
