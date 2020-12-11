@@ -81,3 +81,20 @@ def calc_loss(b_matrix, w_matrix, samples):
     loss = np.mean(f_samples)
 
     return loss
+
+
+def calc_activities(network, inputs, nb_layers):
+    """calculate the activities throughout a network
+
+    Args:
+        network (network class): Description
+        input (inout data): Description
+        nb_layers (number of layers): Description
+    """
+
+    activities = []
+    for layer in range(nb_layers):
+        activities.append(
+            network.forward_to_hidden(inputs, layer).detach().numpy())
+
+    return activities

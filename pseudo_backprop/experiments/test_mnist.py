@@ -33,8 +33,7 @@ def main(params, dataset):
     logging.info(f'The training starts on device {device}.')
 
     # Load the model and the data
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize(0.0, 1.0)])
+    transform = transforms.Compose([transforms.ToTensor()])
     if dataset_type == "cifar10":
         testset = torchvision.datasets.CIFAR10(params["dataset_path"],
                                                train=(dataset == 'train'),
