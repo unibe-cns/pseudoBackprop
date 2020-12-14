@@ -5,6 +5,7 @@ import logging
 import torch
 from pseudo_backprop.layers import FeedbackAlginementModule
 from pseudo_backprop.layers import PseudoBackpropModule
+from pseudo_backprop.layers import VanillaLinear
 from pseudo_backprop import aux
 
 logging.basicConfig(format='Network modules -- %(levelname)s: %(message)s',
@@ -57,7 +58,7 @@ class FullyConnectedNetwork(torch.nn.Module):
             Delegating constructor for the backprop case
         """
         logging.info("Network with vanilla backpropagation is constructed.")
-        return cls(layers, torch.nn.Linear)
+        return cls(layers, VanillaLinear)
 
     @classmethod
     def feedback_alignement(cls, layers):
@@ -131,8 +132,8 @@ class FullyConnectedNetwork(torch.nn.Module):
                 input_data = self.forward_to_hidden(dataset,
                                                     index)
                 b_backward = aux.generalized_pseudo(
-                                    w_forward.detach().cpu().numpy(),
-                                    input_data).to(self.device)
+                    w_forward.detach().cpu().numpy(),
+                    input_data).to(self.device)
                 synapse.set_backward(b_backward)
 
     def get_forward_weights(self):

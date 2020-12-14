@@ -3,6 +3,7 @@
     and the pseudo-prop lienarities
 """
 import logging
+import math
 import torch
 import numpy as np
 from torch import nn
@@ -14,6 +15,23 @@ logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
 # The feedback algnement components
 # The following two functions inherit from torch functionalities to relaize
 # the feedback alignement.
+
+# pylint: disable=W0223,W0212
+class VanillaLinear(torch.nn.Linear):
+    """Vanilla Linear
+       inherit from the torch.nn.Linear to make the init possible
+    """
+
+    def reset_parameters(self) -> None:
+        """reset and/or init the parameters
+           largely taken from pytorch
+        """
+        fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(
+            self.weight)
+        bound = math.sqrt(5 / fan_in)
+        torch.nn.init.uniform_(self.weight, -bound, bound)
+        if self.bias is not None:
+            torch.nn.init.uniform_(self.bias, -bound, bound)
 
 
 # pylint: disable=W0223
@@ -116,7 +134,7 @@ class FeedbackAlginementModule(nn.Module):
             requires_grad=False)
 
         # Initialize the weights
-        k_init = np.sqrt(1/self.input_size)
+        k_init = np.sqrt(5/self.input_size)
         torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
         torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
@@ -237,7 +255,7 @@ class PseudoBackpropModule(nn.Module):
             self.register_buffer('bias', None)
 
         # Initialize the weights
-        k_init = np.sqrt(1/self.input_size)
+        k_init = np.sqrt(5/self.input_size)
         torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
 
