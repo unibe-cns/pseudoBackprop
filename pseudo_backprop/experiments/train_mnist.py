@@ -45,8 +45,7 @@ def main(params):
 
     # set up the normalizer
     # Normalize the images to
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize(0.0, 1.0)])
+    transform = transforms.Compose([transforms.ToTensor()])
 
     # get the dataset
     logging.info("Loading the datasets")

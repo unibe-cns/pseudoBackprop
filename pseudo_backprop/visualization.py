@@ -1,6 +1,7 @@
 """collection of convenience function to plot the results."""
 import os
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # load the style file
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -55,3 +56,38 @@ def single_shot(axes, backprop=None, feedback_a=None, pseudo=None,
     axes.legend()
     axes.set_xlabel("Epochs")
     axes.set_ylabel(y_type)
+
+
+def hist_activities(axes, activities, ylabel='Frequency'):
+    """make historgram of the activities
+
+    Args:
+        axes (pyplot axes object):
+        activities (TYPE): Description
+        ylabel (str, optional): Description
+    """
+
+    axes.spines['top'].set_visible(False)
+    axes.spines['right'].set_visible(False)
+    axes.get_xaxis().tick_bottom()
+    axes.get_yaxis().tick_left()
+    axes.hist(activities)
+    axes.set_xlabel('Activities')
+    axes.set_ylabel(ylabel)
+
+
+def plot_activities(act_arr):
+    """Plot the activities in the layers
+
+    Args:
+        act_arr (list): list of activities
+    """
+
+    n_layers = len(act_arr)
+    fig, axes = plt.subplots(nrows=n_layers, gridspec_kw={'hspace': 0.4})
+
+    for index in range(n_layers):
+        hist_activities(axes[index], act_arr[index].flatten(),
+                        ylabel=f'Layer {index}')
+
+    return fig
