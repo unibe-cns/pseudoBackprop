@@ -74,7 +74,7 @@ def main(params, args):
     if params["dataset"] != "mnist":
         raise NotImplementedError("This experiment is only implemnented for"
                                   "the mnist dataset!")
-    gen_samples = 2000
+    gen_samples = 60000
 
     # make the initial plot
     path_stump = f'{params["model_folder"]}/model_{params["model_type"]}'
@@ -82,7 +82,7 @@ def main(params, args):
     act_arr = measure_activities(params, path_to_model, gen_samples,
                                  args.dataset)
     fig = visu.plot_activities(act_arr)
-    fig.savefig(f'{params["model_folder"]}/activities_final.png')
+    fig.savefig(f'{params["model_folder"]}/activities_initial.png')
 
     # make the plots for the epochs as well
     for index in range(params['epochs']):
