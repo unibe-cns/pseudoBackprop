@@ -27,8 +27,7 @@ def measure_activities(params, model_path, num_examples, dataset) -> list:
 
     # Load the dataset
     # Load the model and the data
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize(0.0, 1.0)])
+    transform = transforms.Compose([transforms.ToTensor()])
     trainset = torchvision.datasets.MNIST(params["dataset_path"],
                                           train=(dataset == 'train'),
                                           download=True,
