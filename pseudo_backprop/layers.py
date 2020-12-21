@@ -10,11 +10,12 @@ from torch import nn
 
 logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
-
+SCALING_FACTOR = 4
 
 # The feedback algnement components
 # The following two functions inherit from torch functionalities to relaize
 # the feedback alignement.
+
 
 # pylint: disable=W0223,W0212
 class VanillaLinear(torch.nn.Linear):
@@ -28,7 +29,7 @@ class VanillaLinear(torch.nn.Linear):
         """
         fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(
             self.weight)
-        bound = math.sqrt(5 / fan_in)
+        bound = math.sqrt(SCALING_FACTOR / fan_in)
         torch.nn.init.uniform_(self.weight, -bound, bound)
         if self.bias is not None:
             torch.nn.init.uniform_(self.bias, -bound, bound)
@@ -134,13 +135,14 @@ class FeedbackAlginementModule(nn.Module):
             requires_grad=False)
 
         # Initialize the weights
-        k_init = np.sqrt(5/self.input_size)
-        torch.nn.init.uniform_(self.weight, a=-1*k_init,
+        k_init = np.sqrt(SCALING_FACTOR/self.input_size)
+        torch.nn.init.uniform_(self.weight, a=-1 * k_init,
                                b=k_init)
         torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
                                b=k_init)
         if bias:
-            torch.nn.init.uniform_(self.bias, a=-1*k_init, b=k_init)
+            torch.nn.init.uniform_(self.bias, a=-SCALING_FACTOR*k_init,
+                                   b=SCALING_FACTOR * k_init)
 
     def forward(self, input_tensor):
         """
@@ -255,7 +257,7 @@ class PseudoBackpropModule(nn.Module):
             self.register_buffer('bias', None)
 
         # Initialize the weights
-        k_init = np.sqrt(5/self.input_size)
+        k_init = np.sqrt(SCALING_FACTOR/self.input_size)
         torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
 
