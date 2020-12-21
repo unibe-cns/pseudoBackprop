@@ -84,7 +84,8 @@ def plot_activities(act_arr):
     """
 
     n_layers = len(act_arr)
-    fig, axes = plt.subplots(nrows=n_layers, gridspec_kw={'hspace': 0.4})
+    fig, axes = plt.subplots(nrows=n_layers, gridspec_kw={'hspace': 0.4},
+                             figsize=(6.4, n_layers * 1.9))
 
     for index in range(n_layers):
         hist_activities(axes[index], act_arr[index].flatten(),

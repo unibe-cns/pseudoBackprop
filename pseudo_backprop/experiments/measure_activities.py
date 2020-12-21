@@ -1,9 +1,11 @@
 """ Experiment to measure the activites """
+import json
 import torch
 import torchvision
 import torchvision.transforms as transforms
 from pseudo_backprop.experiments import exp_aux
 import pseudo_backprop.aux as aux
+from pseudo_backprop import visualization as visu
 
 
 def measure_activities(params, model_path, num_examples, dataset) -> list:
@@ -55,3 +57,44 @@ def measure_activities(params, model_path, num_examples, dataset) -> list:
                                   len(params['layers']))
 
     return act_arr
+
+
+def main(params, args):
+    """The experiment to be called for the command line
+
+    Args:
+        params (dict): Description
+        args (args object): Description
+
+    Raises:
+        NotImplementedError: only implemented for the mnist dataset
+    """
+
+    # this is only implemented for MNIST --> check for it
+    if params["dataset"] != "mnist":
+        raise NotImplementedError("This experiment is only implemnented for"
+                                  "the mnist dataset!")
+    gen_samples = 60000
+
+    # make the initial plot
+    path_stump = f'{params["model_folder"]}/model_{params["model_type"]}'
+    path_to_model = f'{path_stump}_epoch_0_images_0.pth'
+    act_arr = measure_activities(params, path_to_model, gen_samples,
+                                 args.dataset)
+    fig = visu.plot_activities(act_arr)
+    fig.savefig(f'{params["model_folder"]}/activities_initial.png')
+
+    # make the plots for the epochs as well
+    for index in range(params['epochs']):
+        path_to_model = f'{path_stump}_epoch_{index}_images_60000.pth'
+        act_arr = measure_activities(params, path_to_model, gen_samples,
+                                     args.dataset)
+        fig = visu.plot_activities(act_arr)
+        fig.savefig(f'{params["model_folder"]}/activities_epoch_{index+1}.png')
+
+
+if __name__ == '__main__':
+    arguments = exp_aux.parse_experiment_arguments()
+    with open(arguments.params, 'r+') as infile:
+        parameters = json.load(infile)
+    main(parameters, arguments)
