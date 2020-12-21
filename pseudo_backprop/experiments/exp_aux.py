@@ -40,6 +40,8 @@ def parse_experiment_arguments():
     parser.add_argument('--dataset', type=str,
                         help='Choose from <test> or <train>.',
                         default='test')
+    parser.add_argument('--per_images', type=int, default=10000,
+                        help='Per so many images we evaluate the model')
     args = parser.parse_args()
 
     return args

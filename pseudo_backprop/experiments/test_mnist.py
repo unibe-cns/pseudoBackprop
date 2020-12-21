@@ -15,7 +15,7 @@ logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915
-def main(params, dataset):
+def main(params, dataset, per_images=10000):
     """Run the testing on the mnist dataset."""
     # The metaparameter
     layers = params['layers']
@@ -55,12 +55,13 @@ def main(params, dataset):
     backprop_net = exp_aux.load_network(model_type, layers)
     backprop_net.to(device)
 
-    # every 10000 images there is a saved model, hence we have to take into
+    # every <<per_images>> images there is a saved model, hence we have to
+    # take into
     # account that MNIST has 60 000 images and CIFAR10 50 000
     if dataset_type == "mnist":
-        count_helper = 6
+        count_helper = int(60000 / per_images)
     elif dataset_type == "cifar10":
-        count_helper = 5
+        count_helper = int(60000 / per_images)
 
     # run over the output and evaluate the models
     loss_array = []
@@ -68,7 +69,8 @@ def main(params, dataset):
     error_ratio_array = []
     for index in range(epochs * count_helper + 1):
         epoch = 0 if index == 0 else (index - 1) // count_helper
-        ims = 0 if index == 0 else (((index - 1) % count_helper) + 1) * 10000
+        ims = 0 if index == 0 else (((index - 1) % count_helper) + 1) \
+            * per_images
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
         logging.info(f'Working on epoch {epoch} and image {ims}.')
@@ -89,7 +91,8 @@ def main(params, dataset):
 
     # Save the results into an appropriate file into the model folder
     epoch_array = np.arange(0, epochs + 0.001, 1/count_helper)
-    image_array = np.arange(0, epochs * count_helper * 10000 + 10000, 10000)
+    image_array = np.arange(0, epochs * count_helper * per_images + 10000,
+                            per_images)
     to_save = np.array([epoch_array, image_array,
                         np.array(error_ratio_array), np.array(loss_array)]).T
     file_to_save = os.path.join(model_folder, f'results_{dataset}.csv')
@@ -106,4 +109,4 @@ if __name__ == '__main__':
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 
-    main(PARAMETERS, ARGS.dataset)
+    main(PARAMETERS, ARGS.dataset, per_images=ARGS.per_images)
