@@ -114,7 +114,6 @@ def main(params):
                             backprop_net.redo_backward_weights()
                     if model_type == 'gen_pseudo':
                         # get a subset of the dataset
-                        logging.info('counter type called')
                         try:
                             sub_data = genpseudo_iterator.next()[0].view(
                                 params["gen_samples"], -1).to(device)
