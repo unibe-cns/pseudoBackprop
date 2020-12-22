@@ -3,6 +3,8 @@ import argparse
 import os
 import json
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from pseudo_backprop import visualization as visu
 
