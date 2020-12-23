@@ -1,4 +1,5 @@
 """Plot the results of the training."""
+# pylint: disable=C0413
 import argparse
 import os
 import json
