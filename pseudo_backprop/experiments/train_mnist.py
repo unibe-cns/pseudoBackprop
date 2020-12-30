@@ -137,6 +137,7 @@ def main(params):
             # forward + backward + optimize
             y_onehot.zero_()
             unsq_label = labels.unsqueeze(1)
+            unsq_label.to(device)
             y_onehot.scatter_(1, unsq_label, 1)
             outputs = backprop_net(inputs)
             loss_value = loss_function(outputs, y_onehot)
