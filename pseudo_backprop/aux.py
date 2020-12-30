@@ -24,7 +24,7 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
 
     confusion_matrix = np.zeros((10, 10))
     loss_function = torch.nn.MSELoss(reduction='sum')
-    y_onehot = torch.FloatTensor(batch_size, nb_classes)
+    y_onehot = torch.FloatTensor(batch_size, nb_classes, device=device)
     y_onehot.to(device)
     loss = 0
     # turn off gathering the gradient for testing

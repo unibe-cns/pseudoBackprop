@@ -86,8 +86,7 @@ def main(params):
     backprop_net.to(device)
 
     # set up the optimizer and the loss function
-    y_onehot = torch.FloatTensor(batch_size, nb_classes)
-    y_onehot.to(device)
+    y_onehot = torch.FloatTensor(batch_size, nb_classes, device=device)
     loss_function = torch.nn.MSELoss(reduction='sum')
     optimizer = torch.optim.SGD(
         backprop_net.parameters(), lr=learning_rate, momentum=momentum,
@@ -137,7 +136,6 @@ def main(params):
             # forward + backward + optimize
             y_onehot.zero_()
             unsq_label = labels.unsqueeze(1)
-            y_onehot.to(device)
             unsq_label.to(device)
             logging.debug(f'y_onehot device: {y_onehot.device}')
             logging.debug(f'unsq_label device: {unsq_label.device}')
