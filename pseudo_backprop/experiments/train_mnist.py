@@ -138,6 +138,8 @@ def main(params):
             y_onehot.zero_()
             unsq_label = labels.unsqueeze(1)
             unsq_label.to(device)
+            logging.debug(f'y_onehot device: {y_onehot.device}')
+            logging.debug(f'unsq_label device: {unsq_label.device}')
             y_onehot.scatter_(1, unsq_label, 1)
             outputs = backprop_net(inputs)
             loss_value = loss_function(outputs, y_onehot)
