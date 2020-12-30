@@ -137,6 +137,7 @@ def main(params):
             # forward + backward + optimize
             y_onehot.zero_()
             unsq_label = labels.unsqueeze(1)
+            y_onehot.to(device)
             unsq_label.to(device)
             logging.debug(f'y_onehot device: {y_onehot.device}')
             logging.debug(f'unsq_label device: {unsq_label.device}')

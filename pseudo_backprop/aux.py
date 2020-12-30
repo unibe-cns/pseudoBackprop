@@ -35,6 +35,7 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
             outputs = network_model(images)
             y_onehot.zero_()
             unsq_label = labels.unsqueeze(1)
+            y_onehot.to(device)
             unsq_label.to(device)
             y_onehot.scatter_(1, unsq_label, 1)
             loss_value = loss_function(outputs, y_onehot)
