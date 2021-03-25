@@ -18,23 +18,23 @@ SKIP_TRAIN = False
 # start the training and wait for it
 logging.info('Running the training...')
 with open('log_train_bp.log', 'w') as out_file:
-    train_bp = subprocess.Popen(['python', '-m',
+    train_bp = subprocess.Popen(['python3', '-m',
                                  'pseudo_backprop.experiments.train_mnist',
                                  '--params', 'params_vbp.json'],
                                 stdout=out_file, stderr=out_file, shell=False)
 with open('log_train_fa.log', 'w') as out_file:
-    train_fa = subprocess.Popen(['python', '-m',
+    train_fa = subprocess.Popen(['python3', '-m',
                                  'pseudo_backprop.experiments.train_mnist',
                                  '--params', 'params_fa.json'],
                                 stdout=out_file, stderr=out_file, shell=False)
 with open('log_train_pseudo.log', 'w') as out_file:
-    train_pbp = subprocess.Popen(['python', '-m',
+    train_pbp = subprocess.Popen(['python3', '-m',
                                   'pseudo_backprop.experiments.train_mnist',
                                   '--params', 'params_pseudo_backprop.json'],
                                  stdout=out_file, stderr=out_file,
                                  shell=False)
 with open('log_train_gen_pseudo.log', 'w') as out_file:
-    train_gen = subprocess.Popen(['python', '-m',
+    train_gen = subprocess.Popen(['python3', '-m',
                                   'pseudo_backprop.experiments.train_mnist',
                                   '--params', 'params_gen_pseudo.json'],
                                  stdout=out_file, stderr=out_file,
@@ -53,7 +53,7 @@ processes_arr = []
 for exp in exp_params:
     with open(f'log_activities_{exp[:-5]}.log', 'w') as out_file:
         processes_arr.append(subprocess.Popen(
-            ['python', '-m',
+            ['python3', '-m',
              'pseudo_backprop.experiments.measure_activities',
              '--params', exp],
             stdout=out_file, stderr=out_file,
@@ -65,7 +65,7 @@ logging.info('Measuring the activities has finished')
 # start the evaluation and wait for it to finish
 logging.info('Running the evaluation...')
 with open('log_eval_test_bp.log', 'w') as out_file:
-    eval_bp_test = subprocess.Popen(['python', '-m',
+    eval_bp_test = subprocess.Popen(['python3', '-m',
                                      'pseudo_backprop.experiments.test_mnist',
                                      '--params', 'params_vbp.json',
                                      '--dataset', 'test'],
@@ -73,14 +73,14 @@ with open('log_eval_test_bp.log', 'w') as out_file:
                                     shell=False)
 if not SKIP_TRAIN:
   with open('log_eval_train_bp.log', 'w') as out_file:
-      eval_bp_train = subprocess.Popen(['python',  '-m',
+      eval_bp_train = subprocess.Popen(['python3',  '-m',
                                         'pseudo_backprop.experiments.test_mnist',
                                         '--params', 'params_vbp.json',
                                         '--dataset', 'train'],
                                        stdout=out_file, stderr=out_file,
                                        shell=False)
 with open('log_eval_test_fa.log', 'w') as out_file:
-    eval_fa_test = subprocess.Popen(['python', '-m',
+    eval_fa_test = subprocess.Popen(['python3', '-m',
                                      'pseudo_backprop.experiments.test_mnist',
                                      '--params', 'params_fa.json',
                                      '--dataset', 'test'],
@@ -88,14 +88,14 @@ with open('log_eval_test_fa.log', 'w') as out_file:
                                     shell=False)
 if not SKIP_TRAIN:
   with open('log_eval_train_fa.log', 'w') as out_file:
-      eval_fa_train = subprocess.Popen(['python',  '-m',
+      eval_fa_train = subprocess.Popen(['python3',  '-m',
                                         'pseudo_backprop.experiments.test_mnist',
                                         '--params', 'params_fa.json',
                                         '--dataset', 'train'],
                                        stdout=out_file, stderr=out_file,
                                        shell=False)
 with open('log_eval_test_pseudo_backprop.log', 'w') as out_file:
-    eval_pbp_test = subprocess.Popen(['python',  '-m',
+    eval_pbp_test = subprocess.Popen(['python3',  '-m',
                                       'pseudo_backprop.experiments.test_mnist',
                                       '--params', 'params_pseudo_backprop.json',
                                       '--dataset', 'test'],
@@ -103,7 +103,7 @@ with open('log_eval_test_pseudo_backprop.log', 'w') as out_file:
                                      shell=False)
 if not SKIP_TRAIN:
   with open('log_eval_train_pseudo_backprop.log', 'w') as out_file:
-      eval_pbp_train = subprocess.Popen(['python', '-m',
+      eval_pbp_train = subprocess.Popen(['python3', '-m',
                                          'pseudo_backprop.experiments.test_mnist',
                                          '--params',
                                          'params_pseudo_backprop.json',
@@ -111,7 +111,7 @@ if not SKIP_TRAIN:
                                         stdout=out_file, stderr=out_file,
                                         shell=False)
 with open('log_eval_test_gen_pseudo.log', 'w') as out_file:
-    eval_gen_test = subprocess.Popen(['python',  '-m',
+    eval_gen_test = subprocess.Popen(['python3',  '-m',
                                       'pseudo_backprop.experiments.test_mnist',
                                       '--params', 'params_gen_pseudo.json',
                                       '--dataset', 'test'],
@@ -119,7 +119,7 @@ with open('log_eval_test_gen_pseudo.log', 'w') as out_file:
                                      shell=False)
 if not SKIP_TRAIN:
   with open('log_eval_train_gen_pseudo.log', 'w') as out_file:
-      eval_gen_train = subprocess.Popen(['python', '-m',
+      eval_gen_train = subprocess.Popen(['python3', '-m',
                                          'pseudo_backprop.experiments.test_mnist',
                                          '--params',
                                          'params_gen_pseudo.json',
@@ -147,7 +147,7 @@ logging.info('Evaluation has finished')
 
 
 logging.info('Start the plotting...')
-plot_call = ['python',  '-m', 'pseudo_backprop.experiments.plot_mnist_results',
+plot_call = ['python3',  '-m', 'pseudo_backprop.experiments.plot_mnist_results',
              '--params_vbp', 'params_vbp.json',
              '--params_fa', 'params_fa.json',
              '--params_pseudo', 'params_pseudo_backprop.json',
