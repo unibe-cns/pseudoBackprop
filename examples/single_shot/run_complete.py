@@ -10,10 +10,10 @@ import subprocess
 import logging
 import shutil
 
-logging.basicConfig(format='Running expeiments -- %(levelname)s: %(message)s',
+logging.basicConfig(format='Running experiments -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
-SKIP_TRAIN = True
+SKIP_TRAIN = False
 
 # start the training and wait for it
 logging.info('Running the training...')
