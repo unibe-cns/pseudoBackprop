@@ -7,5 +7,6 @@
     "learning_rate": 0.001,
     "momentum": 0.9,
     "random_seed": 456732,
+    "dataset_path": "../../dataset/cifar10"
     "dataset": "cifar10"
 }

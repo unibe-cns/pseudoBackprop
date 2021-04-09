@@ -31,6 +31,7 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
     with torch.no_grad():
         for data in testloader:
             images, labels = data[0].to(device), data[1].to(device)
+            images = images.float()     # for yinyang, we need to convert to float32
             images = images.view(batch_size, -1)
             outputs = network_model(images)
             y_onehot.zero_()

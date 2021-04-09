@@ -7,6 +7,8 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
+from yinyang_dataset.dataset import YinYangDataset
+
 
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
@@ -32,6 +34,10 @@ def main(params):
     else:
         dataset_type = params["dataset"]
 
+    if dataset_type == "yinyang":
+        dataset_size = params["dataset_size"]
+        random_seed = params["random_seed"]
+
     # set random seed
     torch.manual_seed(params["random_seed"])
 
@@ -54,6 +60,11 @@ def main(params):
                                                 train=True,
                                                 download=True,
                                                 transform=transform)
+    # yinyang is not officially implemented by torchvision, so we load it by hand:
+    elif dataset_type == "yinyang":
+        trainset = YinYangDataset(size = dataset_size, seed = random_seed)
+        trainset.classes = trainset.class_names
+
     elif dataset_type == "mnist":
         trainset = torchvision.datasets.MNIST(params["dataset_path"],
                                               train=True,
@@ -61,7 +72,7 @@ def main(params):
                                               transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10']".format(
+                          Choose from ['mnist', 'cifar10', 'yinyang']".format(
             dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
@@ -128,6 +139,9 @@ def main(params):
 
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data[0].to(device), data[1].to(device)
+            # for yinyang, need to convert to float32 because data is in float64
+            if dataset_type == "yinyang": inputs = inputs.float()
+
             inputs = inputs.view(batch_size, -1)
 
             # zero the parameter gradients
@@ -146,7 +160,11 @@ def main(params):
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches
             running_loss += loss_value.item()
-            if ((index+1) * batch_size) % 10000 == 0:
+
+            if dataset_type == "yinyang": per_images = 1000
+            else: per_images == 10000
+            
+            if ((index+1) * batch_size) % per_images == 0:
                 # print every 2000 mini-batches
                 logging.info(f'epoch {epoch}, batch {index}, \
                               loss: {running_loss}')

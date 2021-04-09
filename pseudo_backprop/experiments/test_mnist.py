@@ -8,6 +8,7 @@ import torchvision
 import torchvision.transforms as transforms
 from pseudo_backprop.aux import evaluate_model
 from pseudo_backprop.experiments import exp_aux
+from yinyang_dataset.dataset import YinYangDataset
 
 
 logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
@@ -28,6 +29,10 @@ def main(params, dataset, per_images=10000):
     else:
         dataset_type = params["dataset"]
 
+    if dataset_type == "yinyang":
+        dataset_size = params["dataset_size"]
+        random_seed = params["random_seed"]
+
     # look for device, use gpu if available
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     logging.info(f'The training starts on device {device}.')
@@ -39,6 +44,11 @@ def main(params, dataset, per_images=10000):
                                                train=(dataset == 'train'),
                                                download=True,
                                                transform=transform)
+    # yinyang is not officially implemented by torchvision, so we load it by hand:
+    elif dataset_type == "yinyang":
+        testset = YinYangDataset(size = dataset_size, seed = 41) # KM: implement different seed correctly
+        testset.classes = testset.class_names
+
     elif dataset_type == "mnist":
         testset = torchvision.datasets.MNIST(params["dataset_path"],
                                              train=(dataset == 'train'),
@@ -46,7 +56,7 @@ def main(params, dataset, per_images=10000):
                                              transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10']".format(dataset))
+                          Choose from ['mnist', 'cifar10', 'yinyang']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
     nb_classes = len(testset.classes)
@@ -61,7 +71,10 @@ def main(params, dataset, per_images=10000):
     if dataset_type == "mnist":
         count_helper = int(60000 / per_images)
     elif dataset_type == "cifar10":
-        count_helper = int(60000 / per_images)
+        count_helper = int(50000 / per_images)
+    elif dataset_type == "yinyang":
+        per_images = 100
+        count_helper = int(dataset_size / per_images)
 
     # run over the output and evaluate the models
     loss_array = []
