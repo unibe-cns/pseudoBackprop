@@ -166,11 +166,11 @@ def main(params):
             
             if ((index+1) * batch_size) % per_images == 0:
                 # print every 2000 mini-batches
-                logging.info(f'epoch {epoch}, batch {index}, \
+                logging.info(f'epoch {epoch + 1}, batch {index}, \
                               loss: {running_loss}')
                 running_loss = 0.0
                 # save the model every 10000 examples
-                file_to_save = (f"model_{model_type}_epoch_{epoch}_images_"
+                file_to_save = (f"model_{model_type}_epoch_{epoch + 1}_images_"
                                 f"{(index + 1) * batch_size}.pth")
                 path_to_save = os.path.join(model_folder, file_to_save)
                 torch.save(backprop_net.state_dict(),
