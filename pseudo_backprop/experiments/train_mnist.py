@@ -162,7 +162,7 @@ def main(params):
             running_loss += loss_value.item()
 
             if dataset_type == "yinyang": per_images = 1000
-            else: per_images == 10000
+            else: per_images = 10000
             
             if ((index+1) * batch_size) % per_images == 0:
                 # print every 2000 mini-batches
