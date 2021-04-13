@@ -33,6 +33,9 @@ def main(params, dataset, per_images=10000):
         dataset_size = params["dataset_size"]
         random_seed = params["random_seed"]
 
+    # set width of terminal output for numpy arrays
+    np.set_printoptions(linewidth=160)
+
     # look for device, use gpu if available
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     logging.info(f'The training starts on device {device}.')
@@ -69,20 +72,20 @@ def main(params, dataset, per_images=10000):
     # take into
     # account that MNIST has 60 000 images and CIFAR10 50 000
     if dataset_type == "mnist":
-        count_helper = int(60000 / per_images)
+        nb_batches = int(50000 / per_images)
     elif dataset_type == "cifar10":
-        count_helper = int(50000 / per_images)
+        nb_batches = int(60000 / per_images)
     elif dataset_type == "yinyang":
-        per_images = 100
-        count_helper = int(dataset_size / per_images)
+        per_images = 1000
+        nb_batches = int(dataset_size / per_images)
 
     # run over the output and evaluate the models
     loss_array = []
     conf_matrix_array = {}
     error_ratio_array = []
-    for index in range(epochs * count_helper + 1):
-        epoch = 0 if index == 0 else (index - 1) // count_helper
-        ims = 0 if index == 0 else (((index - 1) % count_helper) + 1) \
+    for index in range(epochs * nb_batches + 1):
+        epoch = 0 if index == 0 else (index - 1) // nb_batches
+        ims = 0 if index == 0 else (((index - 1) % nb_batches) + 1) \
             * per_images
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
@@ -103,8 +106,8 @@ def main(params, dataset, per_images=10000):
         logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
 
     # Save the results into an appropriate file into the model folder
-    epoch_array = np.arange(0, epochs + 0.001, 1/count_helper)
-    image_array = np.arange(0, epochs * count_helper * per_images + 10000,
+    epoch_array = np.arange(0, epochs + 0.001, 1/nb_batches)
+    image_array = np.arange(0, epochs * nb_batches * per_images + 10000,
                             per_images)
     to_save = np.array([epoch_array, image_array,
                         np.array(error_ratio_array), np.array(loss_array)]).T

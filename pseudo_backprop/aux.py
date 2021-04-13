@@ -22,7 +22,7 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
     """
     # pylint: disable=R0914
 
-    confusion_matrix = np.zeros((10, 10))
+    confusion_matrix = np.zeros((nb_classes, nb_classes))
     loss_function = torch.nn.MSELoss(reduction='sum')
     y_onehot = torch.empty(batch_size, nb_classes, device=device)
     y_onehot.to(device)
