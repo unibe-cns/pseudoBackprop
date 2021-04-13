@@ -72,9 +72,9 @@ def main(params, dataset, per_images=10000):
     # take into
     # account that MNIST has 60 000 images and CIFAR10 50 000
     if dataset_type == "mnist":
-        nb_batches = int(50000 / per_images)
-    elif dataset_type == "cifar10":
         nb_batches = int(60000 / per_images)
+    elif dataset_type == "cifar10":
+        nb_batches = int(50000 / per_images)
     elif dataset_type == "yinyang":
         per_images = 1000
         nb_batches = int(dataset_size / per_images)
