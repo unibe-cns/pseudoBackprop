@@ -107,7 +107,7 @@ def main(params, dataset, per_images=10000):
 
     # Save the results into an appropriate file into the model folder
     epoch_array = np.arange(0, epochs + 0.001, 1/nb_batches)
-    image_array = np.arange(0, epochs * nb_batches * per_images + 10000,
+    image_array = np.arange(0, epochs * nb_batches * per_images + per_images,
                             per_images)
     to_save = np.array([epoch_array, image_array,
                         np.array(error_ratio_array), np.array(loss_array)]).T
