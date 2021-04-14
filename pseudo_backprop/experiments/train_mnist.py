@@ -109,7 +109,7 @@ def main(params):
             weight_decay=weight_decay)
     elif optimizer_type == 'Adam':
         optimizer = torch.optim.Adam(
-            backprop_net.parameters(), lr=learning_rate)
+            backprop_net.parameters(), lr=learning_rate, weight_decay=weight_decay)
     else:
         raise ValueError("The chosen optimizer <<{}>> is not implemented. \
                           Choose from ['SGD', 'Adam']".format(
