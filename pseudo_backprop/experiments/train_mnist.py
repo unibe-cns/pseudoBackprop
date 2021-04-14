@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
 from yinyang_dataset.dataset import YinYangDataset
+import time
 
 
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
@@ -16,6 +17,10 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
+
+    # time of initiation, used for timing
+    t0 = time.time()
+
     """
         Execute the training and save the result
     """
@@ -189,7 +194,7 @@ def main(params):
                 torch.save(backprop_net.state_dict(),
                            path_to_save)
 
-    logging.info('The training has finished')
+    logging.info('The training has finished after {} seconds'.format(time.time() - t0))
 
     # save the result
     logging.info("Saving the model")
