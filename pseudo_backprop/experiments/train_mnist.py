@@ -33,6 +33,10 @@ def main(params):
         dataset_type = "mnist"
     else:
         dataset_type = params["dataset"]
+    if "optimizer" not in params:
+        optimizer_type = "SGD"
+    else:
+        optimizer_type = params["optimizer"]
 
     if dataset_type == "yinyang":
         dataset_size = params["dataset_size"]
@@ -99,9 +103,17 @@ def main(params):
     # set up the optimizer and the loss function
     y_onehot = torch.empty(batch_size, nb_classes, device=device)
     loss_function = torch.nn.MSELoss(reduction='sum')
-    optimizer = torch.optim.SGD(
-        backprop_net.parameters(), lr=learning_rate, momentum=momentum,
-        weight_decay=weight_decay)
+    if optimizer_type == 'SGD':
+        optimizer = torch.optim.SGD(
+            backprop_net.parameters(), lr=learning_rate, momentum=momentum,
+            weight_decay=weight_decay)
+    elif optimizer_type == 'Adam':
+        optimizer = torch.optim.Adam(
+            backprop_net.parameters(), lr=learning_rate)
+    else:
+        raise ValueError("The chosen optimizer <<{}>> is not implemented. \
+                          Choose from ['SGD', 'Adam']".format(
+            optimizer_type))
 
     # save the initial network
     file_to_save = (f"model_{model_type}_epoch_0_images_"
@@ -109,6 +121,10 @@ def main(params):
     path_to_save = os.path.join(model_folder, file_to_save)
     torch.save(backprop_net.state_dict(),
                path_to_save)
+
+    # define how often we shall print and output
+    if dataset_type == "yinyang": per_images = dataset_size // 10
+    else: per_images = 10000
 
     # train the network
     counter = 0
@@ -160,9 +176,6 @@ def main(params):
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches
             running_loss += loss_value.item()
-
-            if dataset_type == "yinyang": per_images = 1000
-            else: per_images = 10000
             
             if ((index+1) * batch_size) % per_images == 0:
                 # print every 2000 mini-batches
