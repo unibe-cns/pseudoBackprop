@@ -204,7 +204,7 @@ class PseudoBackpropLinearity(torch.autograd.Function):
         # calculate the gradients that are backpropagated
         # use the pseudoinverse for the backward path
         # this is a time-consuming operation
-        pseudo_inverse = torch.pinverse(weight, rcond=1e-10)
+        pseudo_inverse = torch.linalg.pinv(weight, rcond=1e-10)
         grad_input = grad_output.mm(pseudo_inverse.t())
         # calculate the gradients on the weights
         grad_weight = grad_output.t().mm(input_torch)
@@ -261,7 +261,7 @@ class PseudoBackpropModule(nn.Module):
         torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
 
-        self.pinv = nn.Parameter(torch.pinverse(self.weight),
+        self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
@@ -281,7 +281,7 @@ class PseudoBackpropModule(nn.Module):
         """Recalculate the matrix that is used for the backwards direction
         """
         logging.debug('Redo backward called')
-        self.pinv = nn.Parameter(torch.pinverse(self.weight.detach()),
+        self.pinv = nn.Parameter(torch.linalg.pinv(self.weight.detach()),
                                  requires_grad=False)
 
     def set_backward(self, backward):
