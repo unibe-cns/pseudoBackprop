@@ -12,7 +12,7 @@ def load_network(model_type, layers):
     """
 
     # make the networks
-    possible_networks = ['fa', 'backprop', 'pseudo_backprop']
+    possible_networks = ['fa', 'backprop', 'pseudo_backprop', 'gen_pseudo']
     if model_type == 'fa':
         backprop_net = FullyConnectedNetwork.feedback_alignement(layers)
     elif model_type == 'backprop':

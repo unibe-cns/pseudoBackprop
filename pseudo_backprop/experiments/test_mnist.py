@@ -8,7 +8,7 @@ import torchvision
 import torchvision.transforms as transforms
 from pseudo_backprop.aux import evaluate_model
 from pseudo_backprop.experiments import exp_aux
-from yinyang_dataset.dataset import YinYangDataset
+from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 
 
 logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',

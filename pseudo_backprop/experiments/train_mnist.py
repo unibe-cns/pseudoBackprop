@@ -7,7 +7,7 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
-from yinyang_dataset.dataset import YinYangDataset
+from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 import time
 
 
@@ -120,6 +120,10 @@ def main(params):
                           Choose from ['SGD', 'Adam']".format(
             optimizer_type))
 
+    # set up scheduler for learning rate decay. KM: disabled, as no improvement seen for MNIST/BP
+    #lmbda = lambda epoch: 1.0
+    #scheduler = torch.optim.lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lmbda)
+
     # save the initial network
     file_to_save = (f"model_{model_type}_epoch_0_images_"
                     f"0.pth")
@@ -177,6 +181,7 @@ def main(params):
             loss_value = loss_function(outputs, y_onehot)
             loss_value.backward()
             optimizer.step()
+            #scheduler.step()
 
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches
