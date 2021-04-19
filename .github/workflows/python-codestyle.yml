@@ -4,14 +4,14 @@
 name: Python codestyle
 
 # run test on every push or pull req:
-#on: [push, pull_request]
+on: [push, pull_request]
 
 # run test every day at 12 UTC.
-# KM: I chose this to avoid unnecessary computations
+# KM: this option can be enabled to avoid unnecessary computations
 # the workflow can always be triggered manually at github/actions
-on:
-  schedule:
-    - cron:  '* 12 * * *'
+#on:
+#  schedule:
+#    - cron:  '* 12 * * *'
 
 jobs:
   build:
