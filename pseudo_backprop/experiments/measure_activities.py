@@ -9,7 +9,7 @@ from pseudo_backprop import visualization as visu
 
 
 def measure_activities(params, model_path, num_examples, dataset) -> list:
-    """load a model from path and make experiment to get measuer the activities
+    """load a model from path and make experiment to get a measure of the activities
 
     Args:
         params (dict): Description
