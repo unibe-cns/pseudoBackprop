@@ -2,13 +2,13 @@
 import logging
 import os
 import json
+import time
 import torch
 import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
-import time
 
 
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
