@@ -12,11 +12,6 @@ logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 SCALING_FACTOR = 4
 
-# The feedback algnement components
-# The following two functions inherit from torch functionalities to relaize
-# the feedback alignement.
-
-
 # pylint: disable=W0223,W0212
 class VanillaLinear(torch.nn.Linear):
     """Vanilla Linear
@@ -35,6 +30,10 @@ class VanillaLinear(torch.nn.Linear):
             torch.nn.init.uniform_(self.bias, -bound, bound)
 
 
+# The feedback algnement components
+# The following two functions inherit from torch functionalities to realize
+# the feedback alignement.
+
 # pylint: disable=W0223
 class FeedbackAlignmentLinearity(torch.autograd.Function):
     """
@@ -52,7 +51,7 @@ class FeedbackAlignmentLinearity(torch.autograd.Function):
             ctx: context object to save variables for the backward pass
             input_torch: the input tensor
             weight: the forward weight matrix
-            back_weight: the backward weight matrix which is fix during learing
+            back_weight: the backward weight matrix which is fix during learning
             bias: tensor of the bias variables if applicable
         """
 
@@ -156,20 +155,20 @@ class FeedbackAlginementModule(nn.Module):
 
 
 # The pseudo backpropagation components
-# The following two functions inherit from torch functionalities to relaize
+# The following two functions inherit from torch functionalities to realize
 # the pseudo backprop.
 
 
 # pylint: disable=W0223
 class PseudoBackpropLinearity(torch.autograd.Function):
     """
-        The feedack alignment function
-        This defines the forward and the backwords directions
+        The pseudobackprop function
+        This defines the forward and the backwards directions
     """
 
     # pylint: disable=W0221
     @staticmethod
-    def forward(ctx, input_torch, weight, bias=None):
+    def forward(ctx, input_torch, weight, back_weight, bias=None):
         """
          the forward calculation
 
@@ -177,10 +176,11 @@ class PseudoBackpropLinearity(torch.autograd.Function):
             ctx: context object to save variables for the backward pass
             input_torch: the input tensor
             weight: the forward weight matrix
+            back_weight: the backward weight matrix
             bias: tensor of the bias variables if applicable
         """
 
-        ctx.save_for_backward(input_torch, weight, bias)
+        ctx.save_for_backward(input_torch, weight, back_weight, bias)
         output = input_torch.mm(weight.t())
         if bias is not None:
             output += torch.unsqueeze(bias, 0).expand_as(output)
@@ -199,13 +199,15 @@ class PseudoBackpropLinearity(torch.autograd.Function):
         """
 
         # get variables from the forward pass
-        input_torch, weight, bias = ctx.saved_variables
+        input_torch, weight, back_weight, bias = ctx.saved_variables
+        grad_back_weight = None
 
         # calculate the gradients that are backpropagated
-        # use the pseudoinverse for the backward path
-        # this is a time-consuming operation
-        pseudo_inverse = torch.linalg.pinv(weight, rcond=1e-10)
-        grad_input = grad_output.mm(pseudo_inverse.t())
+        # using the pinv that has been calculated before:
+        # pseudo_backprop: pinv == linalg.pinv
+        # gen_pseudo: pinv == generalized pseudo, see aux.py
+        pseudo_inverse = back_weight
+        grad_input = grad_output.mm(pseudo_inverse)
         # calculate the gradients on the weights
         grad_weight = grad_output.t().mm(input_torch)
         if (bias is not None) and (ctx.needs_input_grad[2]):
@@ -214,7 +216,7 @@ class PseudoBackpropLinearity(torch.autograd.Function):
         else:
             grad_bias = None
 
-        return grad_input, grad_weight, grad_bias
+        return grad_input, grad_weight, grad_back_weight, grad_bias
 
 
 # pylint: disable=R0903
@@ -225,7 +227,7 @@ class PseudoBackpropModule(nn.Module):
 
     def __init__(self, input_size, output_size, bias=True):
         """
-            feedback alignement module with initilaization
+            pseudobackprop module with initilaization
 
             Params:
             input_size: input size of the module
@@ -260,9 +262,10 @@ class PseudoBackpropModule(nn.Module):
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
         torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
-
+        # KM: to fix -- this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
+
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -272,7 +275,7 @@ class PseudoBackpropModule(nn.Module):
             Method to calculate the forward processing through the synapses
         """
 
-        return FeedbackAlignmentLinearity.apply(input_tensor,
+        return PseudoBackpropLinearity.apply(input_tensor,
                                                 self.weight,
                                                 self.pinv.t(),
                                                 self.bias)

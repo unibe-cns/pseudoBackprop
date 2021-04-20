@@ -127,7 +127,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         elif self.mode == 'gen_pseudo':
             logging.info('gen_pseudo redo was called')
             for index, synapse in enumerate(self.synapses):
-                logging.info(f'Working on index: {index}')
+                logging.info(f'(Re-)calculating backward weights in layer: {index}')
                 w_forward = synapse.get_forward()
                 input_data = self.forward_to_hidden(dataset,
                                                     index)
