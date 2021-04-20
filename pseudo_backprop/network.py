@@ -85,6 +85,15 @@ class FullyConnectedNetwork(torch.nn.Module):
             "Network with generalized pseudo-backprop is constructed.")
         return cls(layers, PseudoBackpropModule, mode='gen_pseudo')
 
+    @classmethod
+    def dyn_pseudo_backprop(cls, layers):
+        """
+            Delegating constructor for the dynamical pseudo-backprop case
+        """
+        logging.info(
+            "Network with dynamical pseudo-backprop is constructed.")
+        return cls(layers, PseudoBackpropModule, mode='gen_pseudo')
+
     def forward(self, inputs):
         """
             Entire calculation of the model

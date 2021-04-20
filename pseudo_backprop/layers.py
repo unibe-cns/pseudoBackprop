@@ -210,7 +210,7 @@ class PseudoBackpropLinearity(torch.autograd.Function):
         grad_input = grad_output.mm(pseudo_inverse)
         # calculate the gradients on the weights
         grad_weight = grad_output.t().mm(input_torch)
-        if (bias is not None) and (ctx.needs_input_grad[2]):
+        if (bias is not None) and (ctx.needs_input_grad[3]):
             # gradient at the bias if required
             grad_bias = grad_output.sum(0).squeeze(0)
         else:
@@ -262,7 +262,7 @@ class PseudoBackpropModule(nn.Module):
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
         torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
-        # KM: to fix -- this is not the correct backweight matrix for gen_pseudo!
+        # KM: this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
 
