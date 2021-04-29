@@ -3,8 +3,9 @@
 """
 import logging
 import torch
-from pseudo_backprop.layers import FeedbackAlginementModule
+from pseudo_backprop.layers import FeedbackAlignmentModule
 from pseudo_backprop.layers import PseudoBackpropModule
+from pseudo_backprop.layers import DynPseudoBackpropModule
 from pseudo_backprop.layers import VanillaLinear
 from pseudo_backprop import aux
 
@@ -63,10 +64,10 @@ class FullyConnectedNetwork(torch.nn.Module):
     @classmethod
     def feedback_alignement(cls, layers):
         """
-            Delegating constructor for the feedback alignement case
+            Delegating constructor for the feedback alignment case
         """
-        logging.info("Network with feedback alignement is constructed.")
-        return cls(layers, FeedbackAlginementModule)
+        logging.info("Network with feedback alignment is constructed.")
+        return cls(layers, FeedbackAlignmentModule)
 
     @classmethod
     def pseudo_backprop(cls, layers):
@@ -92,7 +93,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         """
         logging.info(
             "Network with dynamical pseudo-backprop is constructed.")
-        return cls(layers, PseudoBackpropModule, mode='gen_pseudo')
+        return cls(layers, DynPseudoBackpropModule)
 
     def forward(self, inputs):
         """

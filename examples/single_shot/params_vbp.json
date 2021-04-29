@@ -1,5 +1,5 @@
 {
-    "batch_size": 20,
+    "batch_size": 50,
     "layers": [784, 1000, 10],
     "epochs": 5,
     "model_folder": "model_bp",
@@ -7,7 +7,7 @@
     "learning_rate": 0.001,
     "momentum": 0.0,
     "weight_decay": 0.0,
-    "random_seed": 456732,
+    "random_seed": 123456,
     "dataset": "mnist",
     "dataset_path": "../../dataset/mnist"
 }
