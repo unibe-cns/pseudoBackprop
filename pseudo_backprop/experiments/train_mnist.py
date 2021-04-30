@@ -10,7 +10,7 @@ from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 
-
+torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
@@ -32,6 +32,8 @@ def main(params):
     model_folder = params["model_folder"]
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
+    if model_type == 'dyn_pseudo':
+        backwards_learning_rate = params["backwards_learning_rate"]
     momentum = params["momentum"]
     weight_decay = params["weight_decay"]
     if "dataset" not in params:
@@ -180,6 +182,22 @@ def main(params):
             outputs = backprop_net(inputs)
             loss_value = loss_function(outputs, y_onehot)
             loss_value.backward()
+            # print the grad of the forward weights
+            #for i in range(len(backprop_net.synapses)):
+            #    print('Forward weights for synapse:', i)
+            #    print(backprop_net.synapses[i].weight.grad)
+            # print the grad of the backwards weights
+            #for i in range(len(backprop_net.synapses)):
+            #    print('Backwards weights for synapse:', i)
+            #    print(backprop_net.synapses[i].weight_back.grad)
+
+            # for dyn pseudo backprop, we have a separate backwards learning rate
+            # the optimizer applies the standard learning rate on all parameter updates,
+            # so we rescale the gradient of the backwards weights here:
+            if model_type == 'dyn_pseudo':
+                for i in range(len(backprop_net.synapses)):
+                    backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
+
             optimizer.step()
             #scheduler.step()
 

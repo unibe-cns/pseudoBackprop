@@ -333,7 +333,6 @@ class PseudoBackpropModule(nn.Module):
 
         return self.pinv.clone().detach()
 
-
 # The _dynamical_ pseudo backpropagation components
 # The following two functions inherit from torch functionalities to realize
 # dynamical pseudo backprop.
@@ -360,11 +359,13 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             back_weight: the backward weight matrix
             bias: tensor of the bias variables if applicable
         """
-
-        ctx.save_for_backward(input_torch, weight, back_weight, bias)
+        
         output = input_torch.mm(weight.t())
         if bias is not None:
             output += torch.unsqueeze(bias, 0).expand_as(output)
+
+        ctx.save_for_backward(input_torch, weight, back_weight, bias)
+        ctx.intermediate_results = output
 
         return output
 
@@ -376,18 +377,24 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             this is where we implement _two independent_ weight updates
 
             Params:
-            ctx: context object to save variables for the backward pass
+            ctx: context object to save variables for the backward pass,
+                 where we have added the output of the forward pass (the weighted input)
             grad_output: current gradient at the output of the forward pass
         """
 
         # get variables from the forward pass
         input_torch, weight, back_weight, bias = ctx.saved_variables
-        grad_back_weight = None
+        weighted_input = ctx.intermediate_results
 
         # calculate the gradients that are backpropagated
         grad_input = grad_output.mm(back_weight)
         # calculate the gradients on the weights
         grad_weight = grad_output.t().mm(input_torch)
+        # calculate the gradient on the backwards weights
+        grad_back_weight = torch.mm(torch.t(weighted_input),input_torch - torch.mm(weighted_input,back_weight))
+        # add regularizer for backwards matrix
+        grad_back_weight -= .01*back_weight
+
         if (bias is not None) and (ctx.needs_input_grad[3]):
             # gradient at the bias if required
             grad_bias = grad_output.sum(0).squeeze(0)
