@@ -11,7 +11,8 @@ font.style            : normal
 font.weight           : normal
 font.size             : 12
 
-figure.figsize        : 7.16, 5.37
+#figure.figsize        : 7.16, 5.37
+figure.figsize        : 14, 7
 figure.dpi            : 600
 #  figure.subplot.hspace : 0.
 #  figure.subplot.wspace : 0.

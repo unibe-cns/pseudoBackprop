@@ -359,7 +359,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             back_weight: the backward weight matrix
             bias: tensor of the bias variables if applicable
         """
-        
+
         output = input_torch.mm(weight.t())
         if bias is not None:
             output += torch.unsqueeze(bias, 0).expand_as(output)

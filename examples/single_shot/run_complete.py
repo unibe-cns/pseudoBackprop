@@ -39,16 +39,22 @@ with open('log_train_gen_pseudo.log', 'w') as out_file:
                                   '--params', 'params_gen_pseudo.json'],
                                  stdout=out_file, stderr=out_file,
                                  shell=False)
+with open('log_train_gen_pseudo.log', 'w') as out_file:
+    train_dyn = subprocess.Popen(['python3', '-m',
+                                  'pseudo_backprop.experiments.train_mnist',
+                                  '--params', 'params_dyn_pseudo.json'],
+                                 stdout=out_file, stderr=out_file,
+                                 shell=False)
 
 # wait for the training
-wait_for = [p.wait() for p in (train_bp, train_fa, train_pbp, train_gen)]
+wait_for = [p.wait() for p in (train_bp, train_fa, train_pbp, train_gen, train_dyn)]
 logging.info('Training has finished')
 
 
 # run for plotting the acitvities
 logging.info('Running the measurement of the activities')
 exp_params = ['params_fa.json', 'params_gen_pseudo.json',
-              'params_pseudo_backprop.json', 'params_vbp.json']
+              'params_pseudo_backprop.json', 'params_vbp.json', 'params_dyn_pseudo.json']
 processes_arr = []
 for exp in exp_params:
     with open(f'log_activities_{exp[:-5]}.log', 'w') as out_file:
@@ -126,23 +132,43 @@ if not SKIP_TRAIN:
                                          '--dataset', 'train'],
                                         stdout=out_file, stderr=out_file,
                                         shell=False)
+with open('log_eval_test_dyn_pseudo.log', 'w') as out_file:
+    eval_dyn_test = subprocess.Popen(['python3',  '-m',
+                                      'pseudo_backprop.experiments.test_mnist',
+                                      '--params', 'params_dyn_pseudo.json',
+                                      '--dataset', 'test'],
+                                     stdout=out_file, stderr=out_file,
+                                     shell=False)
+if not SKIP_TRAIN:
+  with open('log_eval_train_dyn_pseudo.log', 'w') as out_file:
+      eval_dyn_train = subprocess.Popen(['python3', '-m',
+                                         'pseudo_backprop.experiments.test_mnist',
+                                         '--params',
+                                         'params_dyn_pseudo.json',
+                                         '--dataset', 'train'],
+                                        stdout=out_file, stderr=out_file,
+                                        shell=False)
 
 if SKIP_TRAIN:
   wait_for = [p.wait() for p in (eval_bp_test,
                                  eval_fa_test,
                                  eval_pbp_test,
-                                 eval_gen_test)]
+                                 eval_gen_test,
+                                 eval_dyn_test)]
   shutil.copyfile('model_bp/results_test.csv', 'model_bp/results_train.csv')
   shutil.copyfile('model_fa/results_test.csv', 'model_fa/results_train.csv')
   shutil.copyfile('model_gen_pseudo/results_test.csv',
                   'model_gen_pseudo/results_train.csv')
   shutil.copyfile('model_pseudo/results_test.csv',
                   'model_pseudo/results_train.csv')
+  shutil.copyfile('model_dyn_pseudo/results_test.csv',
+                  'model_dyn_pseudo/results_train.csv')
 else:
   wait_for = [p.wait() for p in (eval_bp_test, eval_bp_train,
                                  eval_fa_test, eval_fa_train,
                                  eval_pbp_test, eval_pbp_train,
-                                 eval_gen_test, eval_gen_train)]
+                                 eval_gen_test, eval_gen_train,
+                                 eval_dyn_test, eval_dyn_train)]
 logging.info('Evaluation has finished')
 
 
@@ -151,6 +177,7 @@ plot_call = ['python3',  '-m', 'pseudo_backprop.experiments.plot_mnist_results',
              '--params_vbp', 'params_vbp.json',
              '--params_fa', 'params_fa.json',
              '--params_pseudo', 'params_pseudo_backprop.json',
-             '--params_gen_pseudo', 'params_gen_pseudo.json']
+             '--params_gen_pseudo', 'params_gen_pseudo.json',
+             '--params_dyn_pseudo', 'params_dyn_pseudo.json']
 subprocess.Popen(plot_call, shell=False)
 logging.info('The plotting has finished')

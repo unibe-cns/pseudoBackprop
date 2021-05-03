@@ -34,6 +34,7 @@ def main(params):
     learning_rate = params["learning_rate"]
     if model_type == 'dyn_pseudo':
         backwards_learning_rate = params["backwards_learning_rate"]
+        size_of_regularizer = params["size_of_regularizer"]
     momentum = params["momentum"]
     weight_decay = params["weight_decay"]
     if "dataset" not in params:
@@ -192,10 +193,14 @@ def main(params):
             #    print(backprop_net.synapses[i].weight_back.grad)
 
             # for dyn pseudo backprop, we have a separate backwards learning rate
-            # the optimizer applies the standard learning rate on all parameter updates,
-            # so we rescale the gradient of the backwards weights here:
+            # and we have to add the regularizer
             if model_type == 'dyn_pseudo':
                 for i in range(len(backprop_net.synapses)):
+                    # add regularizer for backwards matrix
+                    backprop_net.synapses[i].weight_back.grad -= size_of_regularizer * backprop_net.synapses[i].weight_back
+                    # the optimizer applies the standard learning rate on all parameter updates
+                    # So in order to implement a custom learning rate for the backwards matrix,
+                    # we rescale the gradient of the backwards weights here
                     backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
 
             optimizer.step()
@@ -204,7 +209,7 @@ def main(params):
             # print statistics
             # running loss is the loss measured on the last 2000 minibatches
             running_loss += loss_value.item()
-            
+
             if ((index+1) * batch_size) % per_images == 0:
                 # print every 2000 mini-batches
                 logging.info(f'epoch {epoch}, batch {index}, \
