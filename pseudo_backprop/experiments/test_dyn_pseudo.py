@@ -1,4 +1,4 @@
-"""Experiment to if dynamical pseudobackprop converges 
+"""Experiment to test whether dynamical pseudobackprop converges 
    to the data-specific pseudoinverse of the training data"""
 import logging
 import os
