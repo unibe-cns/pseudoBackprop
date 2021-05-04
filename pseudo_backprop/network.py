@@ -146,6 +146,24 @@ class FullyConnectedNetwork(torch.nn.Module):
                     input_data).to(self.device)
                 synapse.set_backward(b_backward)
 
+    def get_dataspec_pinverse(self, dataset=None):
+        """Calculate the data-specific pseudoinverse matrices.
+           This function can be used to compare *any* backward matrix
+           to the data-specific pseudoinverse
+        """
+        b_backward = []
+
+        for index, synapse in enumerate(self.synapses):
+            w_forward = synapse.get_forward()
+            input_data = self.forward_to_hidden(dataset,
+                                                index)
+            b_backward.append(aux.generalized_pseudo(
+                w_forward.detach().cpu().numpy(),
+                input_data).to(self.device)
+            )
+
+        return b_backward
+
     def get_forward_weights(self):
         """Get a copy of the forward weights"""
 

@@ -60,8 +60,11 @@ def generalized_pseudo(w_matrix, dataset):
 
     np_dataset = dataset.detach().cpu().numpy()
     covariance = np.cov(np_dataset.T)
+    mean = np.mean(np_dataset, axis=0)
+    gammasquared = covariance + np.outer(mean,mean)
+    
     # make the singular value decomposition
-    u_matrix, s_matrix, vh_matrix = np.linalg.svd(covariance)
+    u_matrix, s_matrix, vh_matrix = np.linalg.svd(gammasquared)
     # Calculate the generalized pseudoinverse
     gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
     gen_pseudo = np.dot(gamma, np.linalg.pinv(np.dot(w_matrix, gamma)))

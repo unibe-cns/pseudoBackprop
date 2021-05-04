@@ -7,6 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from pseudo_backprop.aux import evaluate_model
+from pseudo_backprop.aux import generalized_pseudo
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 
@@ -89,7 +90,7 @@ def main(params, dataset, per_images=10000):
             * per_images
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
-        logging.info(f'Working on epoch {epoch} and image {ims}.')
+        logging.info(f'• Working on epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
         backprop_net.load_state_dict(torch.load(path_to_model))
         # Evaluate the model

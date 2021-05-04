@@ -39,7 +39,7 @@ with open('log_train_gen_pseudo.log', 'w') as out_file:
                                   '--params', 'params_gen_pseudo.json'],
                                  stdout=out_file, stderr=out_file,
                                  shell=False)
-with open('log_train_gen_pseudo.log', 'w') as out_file:
+with open('log_train_dyn_pseudo.log', 'w') as out_file:
     train_dyn = subprocess.Popen(['python3', '-m',
                                   'pseudo_backprop.experiments.train_mnist',
                                   '--params', 'params_dyn_pseudo.json'],

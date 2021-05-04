@@ -1,5 +1,6 @@
 """Auxillary functions for the experiments."""
 import argparse
+import torch
 from pseudo_backprop.network import FullyConnectedNetwork
 
 
@@ -47,3 +48,13 @@ def parse_experiment_arguments():
     args = parser.parse_args()
 
     return args
+
+def cosine_similarity_tensors(A, B):
+    # Calculate the cosine similarity between two tensors
+    # using the Frobenius inner product
+
+    product = torch.trace(torch.mm(torch.t(A),B))
+    norm = (torch.trace(torch.mm(torch.t(A),A)))**.5 * (torch.trace(torch.mm(torch.t(A),A)))**.5
+
+    # returns cos(theta)
+    return product / norm
