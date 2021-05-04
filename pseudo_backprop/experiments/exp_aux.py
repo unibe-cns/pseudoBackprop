@@ -54,7 +54,7 @@ def cosine_similarity_tensors(A, B):
     # using the Frobenius inner product
 
     product = torch.trace(torch.mm(torch.t(A),B))
-    norm = (torch.trace(torch.mm(torch.t(A),A)))**.5 * (torch.trace(torch.mm(torch.t(A),A)))**.5
+    norm = (torch.trace(torch.mm(torch.t(A),A)))**.5 * (torch.trace(torch.mm(torch.t(B),B)))**.5
 
     # returns cos(theta)
     return product / norm

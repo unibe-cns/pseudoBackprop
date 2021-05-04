@@ -111,7 +111,7 @@ def main(params, per_images=10000):
         per_images = 1000
         nb_batches = int(dataset_size / per_images)
 
-    # load the saved network states and calculate Frobenius norm
+    # load the saved network states and calculate cosine similarity
     back_weights_array = []
     cos_array = []
     for index in range(epochs * nb_batches + 1):
@@ -125,6 +125,8 @@ def main(params, per_images=10000):
         backprop_net.load_state_dict(torch.load(path_to_model))
         # extract the backwards matrix at this stage
         back_weights_array.append(backprop_net.get_backward_weights())
+
+
         
         #logging.info(f'The backwards weight matrix is:\n {back_weights_array[-1]}')
         for layer in range(len(layers)-1):
@@ -134,20 +136,15 @@ def main(params, per_images=10000):
             cos = np.round(
                 exp_aux.cosine_similarity_tensors(
                     torch.from_numpy(back_weights_array[-1][layer].T),
-                    dataspecPinv_array[layer]
-                    ).tolist(),
-                6)
+                    dataspecPinv_array[layer].float()
+                    ).tolist()
+                ,6)
             if cos > 1 or cos < -1:
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos}")
             
             logging.info(f'The angle between the backwards weights and the data-specific pseudoinverse '
                                  f'in layer {layer} is: {np.arccos(cos)*180./np.pi} degrees')
             cos_array.append(cos)
-
-
-   # if len(back_weights_array) != len(dataspecPinv_array):
-    #    raise ValueError("Data-specific pinverse and backwards matrices of inequal length")
-        
 
 
 
