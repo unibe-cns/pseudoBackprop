@@ -14,6 +14,7 @@ torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
+PRINT_DEBUG = True
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
@@ -183,25 +184,35 @@ def main(params):
             outputs = backprop_net(inputs)
             loss_value = loss_function(outputs, y_onehot)
             loss_value.backward()
-            # print the grad of the forward weights
-            #for i in range(len(backprop_net.synapses)):
-            #    print('Forward weights for synapse:', i)
-            #    print(backprop_net.synapses[i].weight.grad)
-            # print the grad of the backwards weights
-            #for i in range(len(backprop_net.synapses)):
-            #    print('Backwards weights for synapse:', i)
-            #    print(backprop_net.synapses[i].weight_back.grad)
 
             # for dyn pseudo backprop, we have a separate backwards learning rate
             # and we have to add the regularizer
             if model_type == 'dyn_pseudo':
                 for i in range(len(backprop_net.synapses)):
                     # add regularizer for backwards matrix
-                    backprop_net.synapses[i].weight_back.grad -= size_of_regularizer * backprop_net.synapses[i].weight_back
+                    backprop_net.synapses[i].weight_back.grad += size_of_regularizer * backprop_net.synapses[i].weight_back
                     # the optimizer applies the standard learning rate on all parameter updates
                     # So in order to implement a custom learning rate for the backwards matrix,
                     # we rescale the gradient of the backwards weights here
                     backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
+
+            if PRINT_DEBUG and model_type == 'dyn_pseudo':
+                # print the grad of the forward weights
+                #for i in range(len(backprop_net.synapses)):
+                #    print('Grad of forward weights for synapse:', i)
+                #    print(backprop_net.synapses[i].weight.grad)
+                # print the grad of the backwards weights
+                for i in range(len(backprop_net.synapses)):
+                   # print('Grad of backwards weights for synapse:', i)
+                   # print(backprop_net.synapses[i].weight_back.grad)
+                   print('Sum of grad of backwards weights for synapse', i,
+                    ':', torch.sum(backprop_net.synapses[i].weight_back.grad))
+
+                for i in range(len(backprop_net.synapses)):
+                #    print('Backwards weights for synapse:', i)
+                #    print(backprop_net.synapses[i].get_backward())
+                    print('Sum of backwards weights for synapse', i,
+                     ':', torch.sum(backprop_net.synapses[i].get_backward()))
 
             optimizer.step()
             #scheduler.step()
