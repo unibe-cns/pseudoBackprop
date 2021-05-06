@@ -378,13 +378,15 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
 
             Params:
             ctx: context object to save variables for the backward pass,
-                 where we have added the output of the forward pass (the weighted input)
+                 where we have added the output of the forward pass
+                 (the activation of the neuron after the current synapse,
+                  also referred to as somatic potential)
             grad_output: current gradient at the output of the forward pass
         """
 
         # get variables from the forward pass
         input_torch, weight, back_weight, bias = ctx.saved_variables
-        weighted_input = ctx.intermediate_results
+        activation = ctx.intermediate_results
 
         # calculate the gradients that are backpropagated
         grad_input = grad_output.mm(back_weight)
@@ -393,7 +395,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
         # calculate the gradient on the backwards weights
         # note that the backwards learning rate and the regularizer
         # are applied before the optimizer call in train_mnist
-        grad_back_weight = torch.mm(torch.t(weighted_input),torch.mm(weighted_input,back_weight) - input_torch)
+        grad_back_weight = torch.mm(torch.t(activation),torch.mm(activation,back_weight) - input_torch)
         if torch.isnan(grad_back_weight).any():
             raise ValueError("Gradient of backwards weights has returned nan. \
             This can occur if backwards learning or regularizer rate is too large.")

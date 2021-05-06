@@ -205,7 +205,7 @@ def main(params):
                 for i in range(len(backprop_net.synapses)):
                    # print('Grad of backwards weights for synapse:', i)
                    # print(backprop_net.synapses[i].weight_back.grad)
-                   print('Sum of grad of backwards weights for synapse', i,
+                   print('Sum of update of backwards weights for synapse', i,
                     ':', torch.sum(backprop_net.synapses[i].weight_back.grad))
 
                 for i in range(len(backprop_net.synapses)):
