@@ -62,7 +62,7 @@ def main(args):
     for name, case in zip(names, cases):
         data[name] = load_datafiles(case)
 
-    # make the plots
+    # make the plots of error and loss
     fig, axes = plt.subplots(ncols=2, nrows=2)
     for index, mode in zip([(0, 0), (0, 1), (1, 0), (1, 1)],
                            ['train_loss', 'train_error',

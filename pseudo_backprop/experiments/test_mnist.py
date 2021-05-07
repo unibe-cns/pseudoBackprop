@@ -84,13 +84,15 @@ def main(params, dataset, per_images=10000):
     loss_array = []
     conf_matrix_array = {}
     error_ratio_array = []
+    norm_forward_weight_array = []
+    norm_back_weight_array = []
     for index in range(epochs * nb_batches + 1):
         epoch = 0 if index == 0 else (index - 1) // nb_batches
         ims = 0 if index == 0 else (((index - 1) % nb_batches) + 1) \
             * per_images
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
-        logging.info(f'• Working on epoch {epoch} and image {ims}.')
+        logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
         backprop_net.load_state_dict(torch.load(path_to_model))
         # Evaluate the model
@@ -102,6 +104,20 @@ def main(params, dataset, per_images=10000):
         loss_array.append(loss)
         conf_matrix_array[index] = confusion_matrix.tolist()
         error_ratio_array.append(1 - class_ratio)
+
+        if model_type != 'backprop':
+
+            norm_forward_weight = []
+            norm_back_weight = []
+            for i in range(len(backprop_net.synapses)):
+                       norm_forward_weight.append(np.linalg.norm(backprop_net.synapses[i].get_forward()))
+                       logging.info(f'The Frobenius norm of the forward weights in layer {i} is: {norm_forward_weight[-1]}')
+                       norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward()))
+                       logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
+
+            norm_forward_weight_array.append(np.array(norm_forward_weight).T)
+            norm_back_weight_array.append(np.array(norm_back_weight).T)
+
         logging.info(f'The final classification ratio is: {class_ratio}')
         logging.info(f'The final loss function: {loss}')
         logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
@@ -119,6 +135,19 @@ def main(params, dataset, per_images=10000):
                            f'confusion_matrix_{dataset}.json'), 'w') as file_f:
         json.dump(conf_matrix_array, file_f, sort_keys=True, indent=4)
 
+    if model_type != 'backprop':
+        # convert array of weight matrices to numpy and save
+        # norm_forward_weight_array = np.array(norm_forward_weight_array)
+        # norm_back_weight_array = np.array(norm_back_weight_array)
+        # to_save_matrix_norms = np.array(norm_forward_weight_array, norm_back_weight_array]).T
+
+        layer_names = [str(i) for i in list(range(len(norm_forward_weight_array[-1])))]
+        file_to_save_fw_norms = os.path.join(model_folder, f'forward_norms_{dataset}.csv')
+        np.savetxt(file_to_save_fw_norms, norm_forward_weight_array, delimiter=',',
+                       header='layer ' + ' ,'.join([layer for layer in layer_names]))
+        file_to_save_bw_norms = os.path.join(model_folder, f'backwards_norms_{dataset}.csv')
+        np.savetxt(file_to_save_bw_norms, norm_back_weight_array, delimiter=',',
+                       header='layer ' + ' ,'.join([layer for layer in layer_names]))
 
 if __name__ == '__main__':
 

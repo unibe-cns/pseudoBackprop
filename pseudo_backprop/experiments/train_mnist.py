@@ -14,7 +14,7 @@ torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
-PRINT_DEBUG = True
+PRINT_DEBUG = False
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
@@ -144,7 +144,7 @@ def main(params):
     for epoch in range(epochs):  # loop over the dataset multiple times
 
         running_loss = 0.0
-        logging.info(f'Working on epoch {epoch + 1}')
+        logging.info(f'• Working on epoch {epoch + 1}')
         for index, data in enumerate(tqdm(trainloader), 0):
             # redo the pseudo-inverse if applicable
             if model_type in ["pseudo_backprop", "gen_pseudo"]:
@@ -205,14 +205,14 @@ def main(params):
                 for i in range(len(backprop_net.synapses)):
                    # print('Grad of backwards weights for synapse:', i)
                    # print(backprop_net.synapses[i].weight_back.grad)
-                   print('Sum of update of backwards weights for synapse', i,
-                    ':', torch.sum(backprop_net.synapses[i].weight_back.grad))
+                   print('Frobenius norm of update of backwards weights for synapse', i,
+                    ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
                 for i in range(len(backprop_net.synapses)):
                 #    print('Backwards weights for synapse:', i)
                 #    print(backprop_net.synapses[i].get_backward())
-                    print('Sum of backwards weights for synapse', i,
-                     ':', torch.sum(backprop_net.synapses[i].get_backward()))
+                    print('Frobenius norm of backwards weights for synapse', i,
+                     ':', torch.linalg.norm(backprop_net.synapses[i].get_backward()))
 
             optimizer.step()
             #scheduler.step()

@@ -37,8 +37,8 @@ def main(params, per_images=10000):
     else:
         dataset_type = params["dataset"]
     if model_type != 'dyn_pseudo':
-        ValueError("Invalid model type. This action can only \
-                     be run for dynamical pseudobackprop")
+        raise ValueError("""Invalid model type. This action can only\
+            be run for dynamical pseudobackprop""")
 
 
     if dataset_type == "yinyang":
@@ -95,11 +95,6 @@ def main(params, per_images=10000):
 
     sub_data = genpseudo_iterator.next()[0].view(len(trainset), -1).to(device)
 
-    # generate a list of the data-specific pinverse matrices
-    dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
-
-    logging.info("Data-specific pseudoinverse matrices calculated")
-
     # every <<per_images>> images there is a saved model, hence we have to
     # take into
     # account that MNIST has 60 000 images and CIFAR10 50 000
@@ -120,11 +115,18 @@ def main(params, per_images=10000):
             * per_images
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
-        logging.info(f'• Working on epoch {epoch} and image {ims}.')
+        logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
         backprop_net.load_state_dict(torch.load(path_to_model))
         # extract the backwards matrix at this stage
         back_weights_array.append(backprop_net.get_backward_weights())
+
+        # generate a list of the data-specific pinverse matrices
+        logging.info("Calculating data-specific pseudoinverse matrices")
+
+        dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
+
+        logging.info("Data-specific pseudoinverse matrices calculated")
 
 
         
@@ -142,8 +144,8 @@ def main(params, per_images=10000):
             if cos > 1 or cos < -1:
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos}")
             
-            logging.info(f'The angle between the backwards weights and the data-specific pseudoinverse '
-                                 f'in layer {layer} is: {np.arccos(cos)*180./np.pi} degrees')
+            logging.info(f'The cosine between the backwards weights and the data-specific pseudoinverse '
+                                 f'in layer {layer} is: {cos}')
             cos_array.append(cos)
 
 
