@@ -190,29 +190,37 @@ def main(params):
             if model_type == 'dyn_pseudo':
                 for i in range(len(backprop_net.synapses)):
                     # add regularizer for backwards matrix
+                    # print('Frobenius norm of update of backwards weights for synapse BEFORE regularizer', i,
+                    # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+
                     backprop_net.synapses[i].weight_back.grad += size_of_regularizer * backprop_net.synapses[i].weight_back
+
+                    # print('Frobenius norm of update of backwards weights for synapse AFTER regularizer', i,
+                    # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
                     # the optimizer applies the standard learning rate on all parameter updates
                     # So in order to implement a custom learning rate for the backwards matrix,
                     # we rescale the gradient of the backwards weights here
                     backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
 
-            if PRINT_DEBUG and model_type == 'dyn_pseudo':
-                # print the grad of the forward weights
-                #for i in range(len(backprop_net.synapses)):
-                #    print('Grad of forward weights for synapse:', i)
-                #    print(backprop_net.synapses[i].weight.grad)
-                # print the grad of the backwards weights
-                for i in range(len(backprop_net.synapses)):
-                   # print('Grad of backwards weights for synapse:', i)
-                   # print(backprop_net.synapses[i].weight_back.grad)
-                   print('Frobenius norm of update of backwards weights for synapse', i,
-                    ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+            # if PRINT_DEBUG and model_type == 'dyn_pseudo':
+            #     # print the grad of the forward weights
+            #     #for i in range(len(backprop_net.synapses)):
+            #     #    print('Grad of forward weights for synapse:', i)
+            #     #    print(backprop_net.synapses[i].weight.grad)
+            #     # print the grad of the backwards weights
+            #     for i in range(len(backprop_net.synapses)):
+            #        # print('Grad of backwards weights for synapse:', i)
+            #        # print(backprop_net.synapses[i].weight_back.grad)
+            #        print('Frobenius norm of update of backwards weights for synapse', i,
+            #         ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
-                for i in range(len(backprop_net.synapses)):
-                #    print('Backwards weights for synapse:', i)
-                #    print(backprop_net.synapses[i].get_backward())
-                    print('Frobenius norm of backwards weights for synapse', i,
-                     ':', torch.linalg.norm(backprop_net.synapses[i].get_backward()))
+                # for i in range(len(backprop_net.synapses)):
+                # #    print('Backwards weights for synapse:', i)
+                # #    print(backprop_net.synapses[i].get_backward())
+                #     print('Frobenius norm of backwards weights ', i,
+                #      ':', torch.linalg.norm(backprop_net.synapses[i].get_backward()))
+                #     print('Frobenius norm of update of backwards weights for synapse for synapse ', i,
+                #      ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
             optimizer.step()
             #scheduler.step()
