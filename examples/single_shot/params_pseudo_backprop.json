@@ -1,7 +1,7 @@
 {
-    "batch_size": 50,
+    "batch_size": 20,
     "layers": [784, 1000, 10],
-    "epochs": 5,
+    "epochs": 50,
     "model_folder": "model_pseudo",
     "model_type": "pseudo_backprop",
     "learning_rate": 0.001,
