@@ -143,7 +143,8 @@ def main(params, per_images=10000):
                 ,6)
             if cos > 1 or cos < -1:
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos}")
-            
+            logging.info(f'The Frobenius norm of the data-specific pinverse in layer {layer} is: {torch.linalg.norm(dataspecPinv_array[layer].float())}')
+            logging.info(f'The Frobenius norm of the backwards weights in layer {layer} is: {torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer].T))}')
             logging.info(f'The cosine between the backwards weights and the data-specific pseudoinverse '
                                  f'in layer {layer} is: {cos}')
             cos_array.append(cos)

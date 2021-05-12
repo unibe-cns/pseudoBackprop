@@ -105,3 +105,7 @@ def calc_activities(network, inputs, nb_layers):
             network.forward_to_hidden(inputs, layer).detach().numpy())
 
     return activities
+
+def calc_mismatch_energy(Gamma, B, W):
+    mismatch_energy = .5 * np.linalg.norm(Gamma - B @ W @ Gamma)
+    return mismatch_energy
