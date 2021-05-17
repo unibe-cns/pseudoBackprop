@@ -16,7 +16,7 @@ torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
-PRINT_DEBUG = False
+PRINT_DEBUG = True
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
@@ -142,7 +142,8 @@ def main(params):
     if dataset_type == "yinyang": per_images = dataset_size // 10
     else: per_images = 10000
 
-    # for dyn pseudo, calculate the data-spec pinv to calculate mismatch energy
+    # for dyn pseudo, calculate the matrix Gamma
+    # (sqrt of the autocorrelation) to calculate mismatch energy
     if model_type == 'dyn_pseudo':
         try:
             sub_data = genpseudo_iterator.next()[0].view(
@@ -151,8 +152,9 @@ def main(params):
             genpseudo_iterator = iter(genpseudo_samp)
             sub_data = genpseudo_iterator.next()[0].view(
                  params["gen_samples"], -1).to(device)
-        Gamma_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
+        Gamma_array = backprop_net.get_gamma_matrix(dataset=sub_data)
         mm_energy = []
+        regularizer_array = [size_of_regularizer for layer in range(len(layers)-1)]
 
     # train the network
     counter = 0
@@ -208,7 +210,7 @@ def main(params):
                     # print('Frobenius norm of update of backwards weights for synapse BEFORE regularizer', i,
                     # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
-                    backprop_net.synapses[i].weight_back.grad += size_of_regularizer * backprop_net.synapses[i].get_backward()
+                    backprop_net.synapses[i].weight_back.grad += regularizer_array[i] * backprop_net.synapses[i].get_backward()
 
                     # print('Frobenius norm of update of backwards weights for synapse AFTER regularizer', i,
                     # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
@@ -220,16 +222,16 @@ def main(params):
                     # print('after learning_rate:', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
             # if PRINT_DEBUG and model_type == 'dyn_pseudo':
-            #     # print the grad of the forward weights
-            #     #for i in range(len(backprop_net.synapses)):
-            #     #    print('Grad of forward weights for synapse:', i)
-            #     #    print(backprop_net.synapses[i].weight.grad)
-            #     # print the grad of the backwards weights
-            #     for i in range(len(backprop_net.synapses)):
-            #        # print('Grad of backwards weights for synapse:', i)
-            #        # print(backprop_net.synapses[i].weight_back.grad)
-            #        print('Frobenius norm of update of backwards weights for synapse', i,
-            #         ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+                # print the grad of the forward weights
+                # for i in range(len(backprop_net.synapses)):
+                #    print('Frobenius norm of forward weights for synapse:', i)
+                #    print(torch.linalg.norm(backprop_net.synapses[i].get_forward()))
+                # print the grad of the backwards weights
+                # for i in range(len(backprop_net.synapses)):
+                #    # print('Grad of backwards weights for synapse:', i)
+                #    # print(backprop_net.synapses[i].weight_back.grad)
+                #    print('Frobenius norm of update of backwards weights for synapse', i,
+                #     ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
                 # for i in range(len(backprop_net.synapses)):
                 # #    print('Backwards weights for synapse:', i)
@@ -264,22 +266,20 @@ def main(params):
                     B_array = backprop_net.get_backward_weights()
                     
                     mm_energy.append(
-                            [calc_mismatch_energy(Gamma_array[i].numpy(),B_array[i].T,W_array[i])
-                            for i in range(len(backprop_net.synapses))]
+                            [ calc_mismatch_energy(Gamma_array[i].numpy(), B_array[i].T, W_array[i])
+                              for i in range(len(backprop_net.synapses))]
                         )
-                    print(mm_energy)
+                    # print(mm_energy)
 
                     for i in range(len(backprop_net.synapses)):
                         logging.info(f'Mismatch energy in layer {i}: {mm_energy[-1][i]}')
                         # if mm energy has been calculated enough times, check if it has reached a plateau
                         if len(mm_energy) >= 3:
-                            if np.sqrt(np.cov(np.array(mm_energy).T[i])) < 0.01 * np.mean(np.array(mm_energy).T[i]):
-                                size_of_regularizer *= regularizer_decay
-                                logging.info(f'Plateau in mismatch energy detected.')
-                                logging.info(f'Regularizer decreased. New size: {size_of_regularizer}')
-                                # reset mismatch energy and exit for loop
-                                mm_energy = []
-                                break
+                            # calculate relative error of last 3 mm_energies
+                            if np.sqrt(np.cov(np.array(mm_energy).T[i][-3:])) < 1e-3 * np.mean(np.array(mm_energy).T[i][-3:]):
+                                regularizer_array[i] *= regularizer_decay
+                                logging.info(f'Plateau in mismatch energy of layer {i} detected.')
+                                logging.info(f'Regularizer of layer {i} decreased. New size: {regularizer_array[i]}')
 
     logging.info('The training has finished after {} seconds'.format(time.time() - t0))
 

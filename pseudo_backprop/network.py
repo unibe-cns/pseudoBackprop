@@ -151,18 +151,33 @@ class FullyConnectedNetwork(torch.nn.Module):
            This function can be used to compare *any* backward matrix
            to the data-specific pseudoinverse
         """
-        b_backward = []
+        ds_pinv = []
 
         for index, synapse in enumerate(self.synapses):
             w_forward = synapse.get_forward()
             input_data = self.forward_to_hidden(dataset,
-                                                index)
-            b_backward.append(aux.generalized_pseudo(
+                                                index).clone().detach().cpu()
+            ds_pinv.append(aux.generalized_pseudo(
                 w_forward.detach().cpu().numpy(),
-                input_data).to(self.device)
+                input_data)
             )
 
-        return b_backward
+        return ds_pinv
+
+    def get_gamma_matrix(self, dataset=None):
+        """Calculate Gamma matrices, i.e. the square root
+           of the autocorrelation matrix of the data vectors
+        """
+        gamma = []
+
+        for index, synapse in enumerate(self.synapses):
+            input_data = self.forward_to_hidden(dataset,
+                                                index)
+            gamma.append(aux.calc_gamma_matrix(
+                         input_data).detach()
+            )
+
+        return gamma
 
     def get_forward_weights(self):
         """Get a copy of the forward weights"""

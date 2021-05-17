@@ -51,7 +51,7 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
 
 
 def generalized_pseudo(w_matrix, dataset):
-    """calculate the generalized dataset
+    """calculate the dataspecific pseudoinverse
 
     Args:
         w_matrix (torch.tensor): forward matrix
@@ -70,6 +70,30 @@ def generalized_pseudo(w_matrix, dataset):
     gen_pseudo = np.dot(gamma, np.linalg.pinv(np.dot(w_matrix, gamma)))
 
     return torch.from_numpy(gen_pseudo)
+
+
+def calc_gamma_matrix(dataset):
+    """calculate square root of the
+       autocorrelation Gamma^2 = <rr^T>
+
+    Args:
+        dataset (torch.tensor): dataset r
+        (tensor of data vectors r)
+    """
+
+    np_dataset = dataset.detach().cpu().numpy()
+    covariance = np.cov(np_dataset.T)
+    mean = np.mean(np_dataset, axis=0)
+    gammasquared = covariance + np.outer(mean,mean)
+    # print('mean: ', mean)
+    # print('cov:', covariance)
+    
+    # make the singular value decomposition
+    u_matrix, s_matrix, vh_matrix = np.linalg.svd(gammasquared)
+    # Calculate the generalized pseudoinverse
+    gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
+
+    return torch.from_numpy(gamma)
 
 
 def calc_loss(b_matrix, w_matrix, samples):
@@ -107,5 +131,17 @@ def calc_activities(network, inputs, nb_layers):
     return activities
 
 def calc_mismatch_energy(Gamma, B, W):
+    """calculates the mismatch energy between B
+       and the data-specific pseudoinverse of W
+
+    Args:
+        Gamma: square root of data vector
+        B: backwards matrix
+        W: forwards matrix
+
+        all as numpy arrays
+    """
+
     mismatch_energy = .5 * np.linalg.norm(Gamma - B @ W @ Gamma)
+
     return mismatch_energy
