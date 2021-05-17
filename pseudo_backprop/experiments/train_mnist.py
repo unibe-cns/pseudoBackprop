@@ -153,7 +153,11 @@ def main(params):
             sub_data = genpseudo_iterator.next()[0].view(
                  params["gen_samples"], -1).to(device)
         Gamma_array = backprop_net.get_gamma_matrix(dataset=sub_data)
+        # initialise an array to save the mismatch energies
         mm_energy = []
+        # count how often mismatch energy in each layer has been calculated
+        # since last update of regularizer
+        mm_energy_counter = [0 for layer in range(len(layers)-1)]
         regularizer_array = [size_of_regularizer for layer in range(len(layers)-1)]
 
     # train the network
@@ -269,17 +273,22 @@ def main(params):
                             [ calc_mismatch_energy(Gamma_array[i].numpy(), B_array[i].T, W_array[i])
                               for i in range(len(backprop_net.synapses))]
                         )
+                    mm_energy_counter = [x + 1 for x in mm_energy_counter]
                     # print(mm_energy)
 
                     for i in range(len(backprop_net.synapses)):
                         logging.info(f'Mismatch energy in layer {i}: {mm_energy[-1][i]}')
                         # if mm energy has been calculated enough times, check if it has reached a plateau
-                        if len(mm_energy) >= 3:
-                            # calculate relative error of last 3 mm_energies
-                            if np.sqrt(np.cov(np.array(mm_energy).T[i][-3:])) < 1e-3 * np.mean(np.array(mm_energy).T[i][-3:]):
-                                regularizer_array[i] *= regularizer_decay
+                        if mm_energy_counter[i] >= 5:
+                            # calculate relative error of last 5 mm_energies
+                            if np.sqrt(np.cov(np.array(mm_energy).T[i][-5:])) < 1e-3 * np.mean(np.array(mm_energy).T[i][-5:]):
                                 logging.info(f'Plateau in mismatch energy of layer {i} detected.')
-                                logging.info(f'Regularizer of layer {i} decreased. New size: {regularizer_array[i]}')
+                                if regularizer_array[i] > 1e-10: 
+                                    regularizer_array[i] *= regularizer_decay
+                                    logging.info(f'Regularizer of layer {i} decreased. New size: {regularizer_array[i]}')
+                                # reset mismatch energy counter in the layer
+                                mm_energy_counter[i] = 0
+
 
     logging.info('The training has finished after {} seconds'.format(time.time() - t0))
 

@@ -18,7 +18,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915,R0912,R1702
-def main(params, per_images=10000):
+def main(params, val_epoch = None, per_images=10000):
 
     """
         Load the training data and generate the data-specific pinverses
@@ -113,6 +113,10 @@ def main(params, per_images=10000):
         epoch = 0 if index == 0 else (index - 1) // nb_batches
         ims = 0 if index == 0 else (((index - 1) % nb_batches) + 1) \
             * per_images
+
+        if val_epoch != None:
+            if epoch != val_epoch: continue
+
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
         logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
@@ -156,5 +160,7 @@ if __name__ == '__main__':
     ARGS = exp_aux.parse_experiment_arguments()
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
+    if ARGS.epoch != None:
+        EPOCH = ARGS.epoch
 
-    main(PARAMETERS)
+    main(PARAMETERS, EPOCH)

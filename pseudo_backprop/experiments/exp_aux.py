@@ -45,6 +45,8 @@ def parse_experiment_arguments():
                         default='test')
     parser.add_argument('--per_images', type=int, default=10000,
                         help='Per so many images we evaluate the model')
+    parser.add_argument('--epoch', type=int,
+                        help='Which epoch to validate')
     args = parser.parse_args()
 
     return args
