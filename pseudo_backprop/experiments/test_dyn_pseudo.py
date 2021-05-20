@@ -162,5 +162,7 @@ if __name__ == '__main__':
         PARAMETERS = json.load(f)
     if ARGS.epoch != None:
         EPOCH = ARGS.epoch
+    else:
+        EPOCH = None
 
     main(PARAMETERS, EPOCH)

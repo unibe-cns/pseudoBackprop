@@ -391,8 +391,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
         # calculate the gradients that are backpropagated
         grad_input = grad_output.mm(back_weight)
         # calculate the gradients on the weights
-        # grad_weight = grad_output.t().mm(input_torch)
-        grad_weight = None
+        grad_weight = grad_output.t().mm(input_torch)
         # calculate the gradient on the backwards weights
         # note that the backwards learning rate and the regularizer
         # are applied before the optimizer call in train_mnist
@@ -401,12 +400,11 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             raise ValueError("Gradient of backwards weights has returned nan. \
             This can occur if backwards learning or regularizer rate is too large.")
 
-        # if (bias is not None) and (ctx.needs_input_grad[3]):
-        #     # gradient at the bias if required
-        #     grad_bias = grad_output.sum(0).squeeze(0)
-        # else:
-        #     grad_bias = None
-        grad_bias = None
+        if (bias is not None) and (ctx.needs_input_grad[3]):
+            # gradient at the bias if required
+            grad_bias = grad_output.sum(0).squeeze(0)
+        else:
+            grad_bias = None
 
         return grad_input, grad_weight, grad_back_weight, grad_bias
 

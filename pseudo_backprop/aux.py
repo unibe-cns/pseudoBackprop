@@ -130,7 +130,7 @@ def calc_activities(network, inputs, nb_layers):
 
     return activities
 
-def calc_mismatch_energy(Gamma, B, W):
+def calc_mismatch_energy(Gamma, B, W, alpha):
     """calculates the mismatch energy between B
        and the data-specific pseudoinverse of W
 
@@ -142,6 +142,6 @@ def calc_mismatch_energy(Gamma, B, W):
         all as numpy arrays
     """
 
-    mismatch_energy = .5 * np.linalg.norm(Gamma - B @ W @ Gamma)
+    mismatch_energy = .5 * np.linalg.norm(Gamma - B @ W @ Gamma)**2 + alpha/2. * np.linalg.norm(B)**2
 
     return mismatch_energy
