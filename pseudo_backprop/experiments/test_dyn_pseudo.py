@@ -107,6 +107,7 @@ def main(params, val_epoch = None, per_images=10000):
         nb_batches = int(dataset_size / per_images)
 
     # load the saved network states and calculate cosine similarity
+    fw_weights_array = []
     back_weights_array = []
     cos_array = []
     for index in range(epochs * nb_batches + 1):
@@ -123,6 +124,7 @@ def main(params, val_epoch = None, per_images=10000):
         path_to_model = os.path.join(model_folder, file_to_load)
         backprop_net.load_state_dict(torch.load(path_to_model))
         # extract the backwards matrix at this stage
+        fw_weights_array.append(backprop_net.get_forward_weights())
         back_weights_array.append(backprop_net.get_backward_weights())
 
         # generate a list of the data-specific pinverse matrices
@@ -147,8 +149,10 @@ def main(params, val_epoch = None, per_images=10000):
                 ,6)
             if cos > 1 or cos < -1:
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos}")
-            logging.info(f'The Frobenius norm of the data-specific pinverse in layer {layer} is: {torch.linalg.norm(dataspecPinv_array[layer].float())}')
-            logging.info(f'The Frobenius norm of the backwards weights in layer {layer} is: {torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer].T))}')
+            # logging.info(f'The Frobenius norm of the data-specific pinverse in layer {layer} is: {torch.linalg.norm(dataspecPinv_array[layer].float())}')
+            # logging.info(f'The Frobenius norm of the backwards weights in layer {layer} is: {torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer].T))}')
+            # print(fw_weights_array[-1][layer])
+            # print(back_weights_array[-1][layer])
             logging.info(f'The cosine between the backwards weights and the data-specific pseudoinverse '
                                  f'in layer {layer} is: {cos}')
             cos_array.append(cos)

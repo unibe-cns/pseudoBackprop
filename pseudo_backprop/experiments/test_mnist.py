@@ -105,15 +105,15 @@ def main(params, dataset, per_images=10000):
         conf_matrix_array[index] = confusion_matrix.tolist()
         error_ratio_array.append(1 - class_ratio)
 
-        if model_type != 'backprop':
+        if model_type == 'dyn_pseudo':
 
             norm_forward_weight = []
             norm_back_weight = []
             for i in range(len(backprop_net.synapses)):
                        norm_forward_weight.append(np.linalg.norm(backprop_net.synapses[i].get_forward()))
-                       logging.info(f'The Frobenius norm of the forward weights in layer {i} is: {norm_forward_weight[-1]}')
+                       # logging.info(f'The Frobenius norm of the forward weights in layer {i} is: {norm_forward_weight[-1]}')
                        norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward()))
-                       logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
+                       # logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
 
             norm_forward_weight_array.append(np.array(norm_forward_weight).T)
             norm_back_weight_array.append(np.array(norm_back_weight).T)
@@ -135,7 +135,7 @@ def main(params, dataset, per_images=10000):
                            f'confusion_matrix_{dataset}.json'), 'w') as file_f:
         json.dump(conf_matrix_array, file_f, sort_keys=True, indent=4)
 
-    if model_type != 'backprop':
+    if model_type == 'dyn_pseudo':
         # convert array of weight matrices to numpy and save
         # norm_forward_weight_array = np.array(norm_forward_weight_array)
         # norm_back_weight_array = np.array(norm_back_weight_array)
