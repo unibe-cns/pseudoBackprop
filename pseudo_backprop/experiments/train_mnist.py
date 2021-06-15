@@ -298,27 +298,27 @@ def main(params):
                                 # reset mismatch energy counter in the layer
                                 mm_energy_counter[i] = 0
 
-                if PRINT_DEBUG and model_type == 'dyn_pseudo':
+                if PRINT_DEBUG and model_type == 'dyn_pseudo' or model_type == 'fa':
                 # print the grad of the forward weights
                     # for i in range(len(backprop_net.synapses)):
                     #     print('Frobenius norm of forward weights for synapse:', i)
                     #     print(torch.linalg.norm(backprop_net.synapses[i].get_forward()))
                     # print the grad of the backwards weights
-                    for i in range(len(backprop_net.synapses)):
-                        # print('Grad of backwards weights for synapse:', i)
-                        # print(backprop_net.synapses[i].weight_back.grad)
-                        print('Frobenius norm of update of backwards weights for synapse', i,
-                        ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+                    # for i in range(len(backprop_net.synapses)):
+                    #     # print('Grad of backwards weights for synapse:', i)
+                    #     # print(backprop_net.synapses[i].weight_back.grad)
+                    #     print('Frobenius norm of update of backwards weights for synapse', i,
+                    #     ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
-                # for i in range(len(backprop_net.synapses)):
-                #     print('Backwards weights for synapse:', i)
-                #     print(backprop_net.synapses[i].get_backward())
-                #     print('Grad of backwards weights for synapse:', i)
-                #     print(backprop_net.synapses[i].weight_back.grad)
-                     #    print('Frobenius norm of backwards weights ', i,
-                     #     ':', torch.linalg.norm(backprop_net.synapses[i].get_backward()))
-                     #    print('Frobenius norm of update of backwards weights for synapse for synapse ', i,
-                     # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+                    for i in range(len(backprop_net.synapses)):
+                        print('Backwards weights for synapse:', i)
+                        print(backprop_net.synapses[i].get_backward())
+                    #     print('Grad of backwards weights for synapse:', i)
+                    #    print(backprop_net.synapses[i].weight_back.grad)
+                    #    print('Frobenius norm of backwards weights ', i,
+                    #     ':', torch.linalg.norm(backprop_net.synapses[i].get_backward()))
+                    #    print('Frobenius norm of update of backwards weights for synapse for synapse ', i,
+                    # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
 
     logging.info('The training has finished after {} seconds'.format(time.time() - t0))

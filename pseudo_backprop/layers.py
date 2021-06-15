@@ -171,6 +171,24 @@ class FeedbackAlignmentModule(nn.Module):
                                                 self.weight_back,
                                                 self.bias)
 
+    def get_forward(self):
+        """Get a detached clone of the forward weights
+
+        Returns:
+            torch.tensor: The forward weights
+        """
+
+        return self.weight.clone().detach()
+
+    def get_backward(self):
+        """Get a detached clone of the backward weights
+
+        Returns:
+            torch.tensor: The backward weights
+        """
+
+        return self.weight_back.clone().detach()
+
 
 # The pseudo backpropagation components
 # The following two functions inherit from torch functionalities to realize
