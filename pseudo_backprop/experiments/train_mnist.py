@@ -113,7 +113,9 @@ def main(params):
             data_samp = torch.utils.data.DataLoader(
                 trainset,
                 batch_size=len(trainset))
+            if PRINT_DEBUG: timer = time.time()
             data = next(iter(data_samp))[0].view(len(trainset), -1)
+            if PRINT_DEBUG: logging.info(f'Time to load data: {time.time()-timer}s')
             # calling the second dataloader changes the RNG state, so we reset
             torch.manual_seed(random_seed)
 
@@ -156,7 +158,9 @@ def main(params):
     # for dyn pseudo, calculate the matrix Gamma
     # (sqrt of the autocorrelation) to calculate mismatch energy
     if model_type == 'dyn_pseudo':
+        if PRINT_DEBUG: gamma_timer = time.time()
         Gamma_array = backprop_net.get_gamma_matrix(dataset=data)
+        if PRINT_DEBUG: logging.info(f'Time to calculate Gamma matrices: {time.time()-gamma_timer}s')
         # initialise an array to save the mismatch energies
         mm_energy = []
         # count how often mismatch energy in each layer has been calculated
@@ -255,12 +259,14 @@ def main(params):
                     W_array = backprop_net.get_forward_weights()
                     B_array = backprop_net.get_backward_weights()
                     
+                    if PRINT_DEBUG: timer = time.time()
                     mm_energy.append(
                             [ calc_mismatch_energy(
                                 Gamma_array[i].numpy(), B_array[i].T, W_array[i], regularizer_array[i]
                                 )
                               for i in range(len(backprop_net.synapses))]
                         )
+                    if PRINT_DEBUG: logging.info(f'Time to calculate mismatch energy: {time.time()-timer}s')
                     mm_energy_counter = [x + 1 for x in mm_energy_counter]
                     # print(mm_energy)
 
