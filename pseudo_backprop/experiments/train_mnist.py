@@ -113,15 +113,15 @@ def main(params):
             data_samp = torch.utils.data.DataLoader(
                 trainset,
                 batch_size=len(trainset))
+            data = next(iter(data_samp))[0].view(len(trainset), -1)
+            # calling the second dataloader changes the RNG state, so we reset
+            torch.manual_seed(random_seed)
 
     logging.info("Datasets are loaded")
 
     # make the networks
     backprop_net = exp_aux.load_network(model_type, layers)
     backprop_net.to(device)
-
-    for i in range(len(backprop_net.synapses)):
-        print(backprop_net.synapses[i].weight_back)
 
     # set up the optimizer and the loss function
     y_onehot = torch.empty(batch_size, nb_classes, device=device)
@@ -156,31 +156,13 @@ def main(params):
     # for dyn pseudo, calculate the matrix Gamma
     # (sqrt of the autocorrelation) to calculate mismatch energy
     if model_type == 'dyn_pseudo':
-        sub_data = next(iter(data_samp))[0].view(len(trainset), -1)
-        Gamma_array = backprop_net.get_gamma_matrix(dataset=sub_data)
+        Gamma_array = backprop_net.get_gamma_matrix(dataset=data)
         # initialise an array to save the mismatch energies
         mm_energy = []
-        # print(torch.linalg.norm(Gamma_array[1]))
         # count how often mismatch energy in each layer has been calculated
         # since last update of regularizer
         mm_energy_counter = [0 for layer in range(len(layers)-1)]
         regularizer_array = [size_of_regularizer for layer in range(len(layers)-1)]
-
-        # if PRINT_DEBUG:
-        #     # print mismatch energy at minimum, i.e. bachwards weights = ds-pinv
-        #     dspinv = backprop_net.get_dataspec_pinverse(sub_data)
-        #     W_array = backprop_net.get_forward_weights()
-        #     mm_energy_minimum = [ calc_mismatch_energy(
-        #                         Gamma_array[i].numpy(), dspinv[i].float().numpy(), W_array[i], 0.*regularizer_array[i]
-        #                         )
-        #                       for i in range(len(backprop_net.synapses))]
-        #     logging.info(f'Minimum of mismatch energy (using data-specific pseudoinverse): {mm_energy_minimum}')
-
-        # # FOR TESTING, set bw weights to ds-pinv
-        # logging.info(f'Calculating ds-pinvs')
-        # dspinv = backprop_net.get_dataspec_pinverse(sub_data)
-        # for i in range(len(backprop_net.synapses)):
-        #     backprop_net.synapses[i].weight_back = torch.nn.Parameter(dspinv[i].t().float())
 
     # train the network
     counter = 0
@@ -298,21 +280,24 @@ def main(params):
                                 # reset mismatch energy counter in the layer
                                 mm_energy_counter[i] = 0
 
-                if PRINT_DEBUG and model_type == 'dyn_pseudo' or model_type == 'fa':
+                # if PRINT_DEBUG and model_type == 'dyn_pseudo' or model_type == 'fa':
                 # print the grad of the forward weights
                     # for i in range(len(backprop_net.synapses)):
                     #     print('Frobenius norm of forward weights for synapse:', i)
                     #     print(torch.linalg.norm(backprop_net.synapses[i].get_forward()))
                     # print the grad of the backwards weights
                     # for i in range(len(backprop_net.synapses)):
-                    #     # print('Grad of backwards weights for synapse:', i)
-                    #     # print(backprop_net.synapses[i].weight_back.grad)
-                    #     print('Frobenius norm of update of backwards weights for synapse', i,
-                    #     ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+                    #     print('Grad of forward weights for synapse:', i)
+                    #     print(backprop_net.synapses[i].weight.grad)
+                        # print('Frobenius norm of update of backwards weights for synapse', i,
+                        # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
-                    for i in range(len(backprop_net.synapses)):
-                        print('Backwards weights for synapse:', i)
-                        print(backprop_net.synapses[i].get_backward())
+                    # for i in range(len(backprop_net.synapses)):
+                    #     print('Forward weights for synapse:', i)
+                    #     print(backprop_net.synapses[i].get_forward())
+                    # for i in range(len(backprop_net.synapses)):
+                    #     print('Backwards weights for synapse:', i)
+                    #     print(backprop_net.synapses[i].get_backward())
                     #     print('Grad of backwards weights for synapse:', i)
                     #    print(backprop_net.synapses[i].weight_back.grad)
                     #    print('Frobenius norm of backwards weights ', i,

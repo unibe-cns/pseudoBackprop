@@ -153,13 +153,13 @@ class FeedbackAlignmentModule(nn.Module):
 
         # Initialize the weights
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
-        torch.nn.init.uniform_(self.weight, a=-1 * k_init,
+        torch.nn.init.uniform_(self.weight, a=-1*k_init,
                                b=k_init)
         torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
                                b=k_init)
         if bias:
-            torch.nn.init.uniform_(self.bias, a=-SCALING_FACTOR*k_init,
-                                   b=SCALING_FACTOR * k_init)
+            torch.nn.init.uniform_(self.bias, a=-1*k_init,
+                                   b=k_init)
 
     def forward(self, input_tensor):
         """
