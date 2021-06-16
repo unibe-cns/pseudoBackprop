@@ -179,6 +179,20 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         return gamma
 
+    def get_gamma2_matrix(self, dataset=None):
+        """Calculate squared Gamma matrices
+        """
+        gamma2 = []
+
+        for index, synapse in enumerate(self.synapses):
+            input_data = self.forward_to_hidden(dataset,
+                                                index)
+            gamma2.append(aux.calc_gamma2_matrix_torch(
+                         input_data).detach()
+            )
+
+        return gamma2
+
     def get_forward_weights(self):
         """Get a copy of the forward weights"""
 

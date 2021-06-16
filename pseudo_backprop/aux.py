@@ -49,6 +49,43 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
 
     return loss, confusion_matrix
 
+def torchcov(m, rowvar=True, inplace=False):
+    # implements covariance estimator 
+    # via https://discuss.pytorch.org/t/covariance-and-gradient-support/16217/4
+
+    '''Estimate a covariance matrix given data.
+
+    Covariance indicates the level to which two variables vary together.
+    If we examine N-dimensional samples, `X = [x_1, x_2, ... x_N]^T`,
+    then the covariance matrix element `C_{ij}` is the covariance of
+    `x_i` and `x_j`. The element `C_{ii}` is the variance of `x_i`.
+
+    Args:
+        m: A 1-D or 2-D array containing multiple variables and observations.
+            Each row of `m` represents a variable, and each column a single
+            observation of all those variables.
+        rowvar: If `rowvar` is True, then each row represents a
+            variable, with observations in the columns. Otherwise, the
+            relationship is transposed: each column represents a variable,
+            while the rows contain observations.
+
+    Returns:
+        The covariance matrix of the variables.
+    '''
+    if m.dim() > 2:
+        raise ValueError('m has more than 2 dimensions')
+    if m.dim() < 2:
+        m = m.view(1, -1)
+    if not rowvar and m.size(0) != 1:
+        m = m.t()
+    # m = m.type(torch.double)  # uncomment this line if desired
+    fact = 1.0 / (m.size(1) - 1)
+    if inplace:
+        m -= torch.mean(m, dim=1, keepdim=True)
+    else:
+        m = m - torch.mean(m, dim=1, keepdim=True)
+    mt = m.t()  # if complex: mt = m.t().conj()
+    return fact * m.matmul(mt).squeeze()
 
 def generalized_pseudo(w_matrix, dataset):
     """calculate the dataspecific pseudoinverse
@@ -94,6 +131,37 @@ def calc_gamma_matrix(dataset):
     gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
 
     return torch.from_numpy(gamma)
+
+def calc_gamma2_matrix(dataset):
+    """calculate
+       autocorrelation Gamma^2 = <rr^T>
+
+    Args:
+        dataset (torch.tensor): dataset r
+        (tensor of data vectors r)
+    """
+
+    np_dataset = dataset.detach().cpu().numpy()
+    covariance = np.cov(np_dataset.T)
+    mean = np.mean(np_dataset, axis=0)
+    gammasquared = covariance + np.outer(mean,mean)
+
+    return torch.from_numpy(gammasquared)
+
+def calc_gamma2_matrix_torch(dataset):
+    """calculate
+       autocorrelation Gamma^2 = <rr^T>
+       in torch. This is faster than numpy
+
+    Args:
+        dataset (torch.tensor): dataset r
+        (tensor of data vectors r)
+    """
+
+    covariance = torchcov(dataset.T)
+    mean = torch.mean(dataset,axis=0)
+
+    return covariance + torch.outer(mean,mean)
 
 
 def calc_loss(b_matrix, w_matrix, samples):
@@ -143,5 +211,24 @@ def calc_mismatch_energy(Gamma, B, W, alpha):
     """
 
     mismatch_energy = .5 * np.linalg.norm(Gamma - B @ W @ Gamma)**2 + alpha/2. * np.linalg.norm(B)**2
+
+    return mismatch_energy
+
+def calc_mismatch_energy_fast(Gamma2, B, W, alpha):
+    """calculates the mismatch energy between B
+       and the data-specific pseudoinverse of W
+       using Gamma squared
+
+    Args:
+        Gamma2: square root of data vector
+        B: backwards matrix
+        W: forwards matrix
+
+        all as numpy arrays
+    """
+
+    I = np.identity(np.shape(Gamma2)[0])
+
+    mismatch_energy = .5 * np.trace((I - B @ W).T @ (I - B @ W) @ Gamma2) + alpha/2. * np.linalg.norm(B)**2
 
     return mismatch_energy
