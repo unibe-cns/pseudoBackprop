@@ -158,12 +158,8 @@ def main(params):
     # for dyn pseudo, calculate the matrix Gamma
     # (sqrt of the autocorrelation) to calculate mismatch energy
     if model_type == 'dyn_pseudo':
-        # if PRINT_DEBUG: gamma_timer = time.time()
-        # Gamma_array = backprop_net.get_gamma_matrix(dataset=input_data)
-        # if PRINT_DEBUG: logging.info(f'Time to calculate Gamma matrices: {time.time()-gamma_timer}s')
         # initialise an array to save the mismatch energies
         mm_energy = []
-        # mm_energy_fast = []
         # count how often mismatch energy in each layer has been calculated
         # since last update of regularizer
         mm_energy_counter = [0 for layer in range(len(layers)-1)]
@@ -276,7 +272,7 @@ def main(params):
                               for i in range(len(backprop_net.synapses))]
                         )
                     if PRINT_DEBUG: logging.info(f'Time to calculate mismatch energy: {time.time()-timer}s')
-                    
+
                     mm_energy_counter = [x + 1 for x in mm_energy_counter]
 
                     for i in range(len(backprop_net.synapses)):

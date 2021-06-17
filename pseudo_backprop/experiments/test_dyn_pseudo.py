@@ -109,7 +109,15 @@ def main(params, val_epoch = None, per_images=10000):
     # load the saved network states and calculate cosine similarity
     fw_weights_array = []
     back_weights_array = []
+    fw_norm_weights = [0]*(len(layers)-1)
+    back_norm_weights = [0]*(len(layers)-1)
+    fw_norm_weights_array = []
+    back_norm_weights_array = []
     cos_array = []
+    cos = [0]*(len(layers)-1)
+    epoch_array = []
+    image_array = []
+
     for index in range(epochs * nb_batches + 1):
         epoch = 0 if index == 0 else (index - 1) // nb_batches
         ims = 0 if index == 0 else (((index - 1) % nb_batches) + 1) \
@@ -118,14 +126,17 @@ def main(params, val_epoch = None, per_images=10000):
         if val_epoch != None:
             if epoch != val_epoch: continue
 
+        epoch_array.append(epoch)
+        image_array.append(ims)
+
         file_to_load = (f"model_{model_type}_epoch_{epoch}_images_"
                         f"{ims}.pth")
         logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
         backprop_net.load_state_dict(torch.load(path_to_model))
         # extract the backwards matrix at this stage
-        fw_weights_array.append(backprop_net.get_forward_weights())
-        back_weights_array.append(backprop_net.get_backward_weights())
+        fw_weights_array.append(backprop_net.get_forward_weights().copy())
+        back_weights_array.append(backprop_net.get_backward_weights().copy())
 
         # generate a list of the data-specific pinverse matrices
         logging.info("Calculating data-specific pseudoinverse matrices")
@@ -134,28 +145,41 @@ def main(params, val_epoch = None, per_images=10000):
 
         logging.info("Data-specific pseudoinverse matrices calculated")
 
-
-        
-        #logging.info(f'The backwards weight matrix is:\n {back_weights_array[-1]}')
         for layer in range(len(layers)-1):
             # calculate the cosine similarity using the Frobenius norm
             # between the data-specific pseudoinverse
             # and the dynamical backwards matrix
-            cos = np.round(
+            cos[layer] = np.round(
                 exp_aux.cosine_similarity_tensors(
                     torch.from_numpy(back_weights_array[-1][layer].T),
                     dataspecPinv_array[layer].float()
                     ).tolist()
                 ,6)
-            if cos > 1 or cos < -1:
-                raise ValueError(f"Cosine between tensors has returned invalid value {cos}")
-            # logging.info(f'The Frobenius norm of the data-specific pinverse in layer {layer} is: {torch.linalg.norm(dataspecPinv_array[layer].float())}')
-            # logging.info(f'The Frobenius norm of the backwards weights in layer {layer} is: {torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer].T))}')
-            # print(fw_weights_array[-1][layer])
-            # print(back_weights_array[-1][layer])
+            if cos[layer] > 1 or cos[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos[layer]}")
             logging.info(f'The cosine between the backwards weights and the data-specific pseudoinverse '
-                                 f'in layer {layer} is: {cos}')
-            cos_array.append(cos)
+                                 f'in layer {layer} is: {cos[layer]}')
+
+            # calculate norm of weights for later analysis
+            fw_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(fw_weights_array[-1][layer]))
+            back_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer]))
+        
+        cos_array.append(cos.copy())
+        fw_norm_weights_array.append(fw_norm_weights.copy())
+        back_norm_weights_array.append(back_norm_weights.copy())
+
+    # Save the results into an appropriate file into the model folder
+    layer_names = [str(i) for i in list(range(len(cos_array[-1])))]
+    to_save = np.array([epoch_array, image_array])
+    to_save = np.concatenate((to_save, np.array(fw_norm_weights_array).T, np.array(back_norm_weights_array).T, np.array(cos_array).T), axis=0).T
+    file_to_save_cos = os.path.join(model_folder, f'train_results_dyn_pseudo.csv')
+    header = ('epochs, images, '
+             + 'W layer ' + ', W layer '.join([layer for layer in layer_names])
+             + ', B layer ' + ', B layer '.join([layer for layer in layer_names])
+             + ', cos layer ' + ', cos layer '.join([layer for layer in layer_names]))
+    np.savetxt(file_to_save_cos, to_save, delimiter=',',
+                       header=header)
+    logging.info(f'Saved results to train_results_dyn_pseudo.csv')
 
 
 

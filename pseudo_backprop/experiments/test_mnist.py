@@ -115,8 +115,8 @@ def main(params, dataset, per_images=10000):
                        norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward()))
                        # logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
 
-            norm_forward_weight_array.append(np.array(norm_forward_weight).T)
-            norm_back_weight_array.append(np.array(norm_back_weight).T)
+            norm_forward_weight_array.append(np.array(norm_forward_weight.copy()).T)
+            norm_back_weight_array.append(np.array(norm_back_weight.copy()).T)
 
         logging.info(f'The final classification ratio is: {class_ratio}')
         logging.info(f'The final loss function: {loss}')
@@ -142,12 +142,18 @@ def main(params, dataset, per_images=10000):
         # to_save_matrix_norms = np.array(norm_forward_weight_array, norm_back_weight_array]).T
 
         layer_names = [str(i) for i in list(range(len(norm_forward_weight_array[-1])))]
+
         file_to_save_fw_norms = os.path.join(model_folder, f'forward_norms_{dataset}.csv')
-        np.savetxt(file_to_save_fw_norms, norm_forward_weight_array, delimiter=',',
-                       header='layer ' + ' ,'.join([layer for layer in layer_names]))
+        to_save = np.array([epoch_array, image_array])
+        to_save = np.append(to_save, np.array(norm_forward_weight_array).T, axis=0).T
+        np.savetxt(file_to_save_fw_norms, to_save, delimiter=',',
+                       header='epochs, images, ' + 'layer ' + ' ,'.join([layer for layer in layer_names]))
+
         file_to_save_bw_norms = os.path.join(model_folder, f'backwards_norms_{dataset}.csv')
-        np.savetxt(file_to_save_bw_norms, norm_back_weight_array, delimiter=',',
-                       header='layer ' + ' ,'.join([layer for layer in layer_names]))
+        to_save = np.array([epoch_array, image_array])
+        to_save = np.append(to_save, np.array(norm_back_weight_array).T, axis=0).T
+        np.savetxt(file_to_save_bw_norms, to_save, delimiter=',',
+                       header='epochs, images, ' + 'layer ' + ' ,'.join([layer for layer in layer_names]))
 
 if __name__ == '__main__':
 
