@@ -215,22 +215,11 @@ def main(params):
             # and we have to add the regularizer
             if model_type == 'dyn_pseudo':
                 for i in range(len(backprop_net.synapses)):
-                    # add regularizer for backwards matrix
-                    # print('Frobenius norm of update of backwards weights for synapse BEFORE regularizer', i,
-                    # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
-
-                    backprop_net.synapses[i].weight_back.grad += regularizer_array[i] * backprop_net.synapses[i].get_backward()
-
-                    # print('Frobenius norm of update of backwards weights for synapse AFTER regularizer', i,
-                    # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
-                    # the optimizer applies the standard learning rate on all parameter updates
-                    # So in order to implement a custom learning rate for the backwards matrix,
-                    # we rescale the gradient of the backwards weights here
-                    # print('before learning_rate:', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
+                    # multiply by backwards learning rate
+                    # (optimizer multiplies this with learning_rate)
                     backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
-                    # print('after learning_rate:', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
-
-            
+                    # add regularizer for backwards matrix
+                    backprop_net.synapses[i].weight_back.grad += regularizer_array[i] * backprop_net.synapses[i].get_backward()
 
             optimizer.step()
             #scheduler.step()
