@@ -215,11 +215,11 @@ def main(params):
             # and we have to add the regularizer
             if model_type == 'dyn_pseudo':
                 for i in range(len(backprop_net.synapses)):
+                    # add regularizer for backwards matrix
+                    backprop_net.synapses[i].weight_back.grad += regularizer_array[i] * backprop_net.synapses[i].get_backward()
                     # multiply by backwards learning rate
                     # (optimizer multiplies this with learning_rate)
                     backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
-                    # add regularizer for backwards matrix
-                    backprop_net.synapses[i].weight_back.grad += regularizer_array[i] * backprop_net.synapses[i].get_backward()
 
             optimizer.step()
             #scheduler.step()
