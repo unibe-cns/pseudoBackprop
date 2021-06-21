@@ -11,6 +11,8 @@ import numpy as np
 from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
+from pseudo_backprop.aux import evaluate_model
+
 
 torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
@@ -80,6 +82,9 @@ def main(params, val_epoch = None, per_images=10000):
 
     nb_classes = len(trainset.classes)
     logging.info('The number of classes is %i', nb_classes)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                              shuffle=True, num_workers=2)
+    nb_classes = len(trainset.classes)
 
     logging.info("Datasets are loaded")
 
@@ -107,6 +112,10 @@ def main(params, val_epoch = None, per_images=10000):
         nb_batches = int(dataset_size / per_images)
 
     # load the saved network states and calculate cosine similarity
+    loss_array = []
+    conf_matrix_array = {}
+    error_ratio_array = []
+
     fw_weights_array = []
     back_weights_array = []
     fw_norm_weights = [0]*(len(layers)-1)
@@ -115,6 +124,7 @@ def main(params, val_epoch = None, per_images=10000):
     back_norm_weights_array = []
     cos_array = []
     cos = [0]*(len(layers)-1)
+    
     epoch_array = []
     image_array = []
 
@@ -134,6 +144,18 @@ def main(params, val_epoch = None, per_images=10000):
         logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
         backprop_net.load_state_dict(torch.load(path_to_model))
+
+        # evaluate the model using the train data set
+        loss, confusion_matrix = evaluate_model(backprop_net, trainloader,
+                                                batch_size, device,
+                                                nb_classes)
+        class_ratio = (confusion_matrix.diagonal().sum() /
+                       confusion_matrix.sum())
+        loss_array.append(loss)
+        conf_matrix_array[index] = confusion_matrix.tolist()
+        error_ratio_array.append(1 - class_ratio)
+
+
         # extract the backwards matrix at this stage
         fw_weights_array.append(backprop_net.get_forward_weights().copy())
         back_weights_array.append(backprop_net.get_backward_weights().copy())
@@ -162,7 +184,9 @@ def main(params, val_epoch = None, per_images=10000):
 
             # calculate norm of weights for later analysis
             fw_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(fw_weights_array[-1][layer]))
+            logging.info(f'The norm of the forward weights in layer {layer} is: {fw_norm_weights[layer]}')
             back_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer]))
+            logging.info(f'The norm of the backward weights in layer {layer} is: {back_norm_weights[layer]}')
         
         cos_array.append(cos.copy())
         fw_norm_weights_array.append(fw_norm_weights.copy())

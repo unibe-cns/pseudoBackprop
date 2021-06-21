@@ -240,7 +240,7 @@ def main(params):
                 torch.save(backprop_net.state_dict(),
                            path_to_save)
 
-                if model_type == 'dyn_pseudo':
+                if False and model_type == 'dyn_pseudo':
                     # calculate mismatch energy
                     W_array = backprop_net.get_forward_weights()
                     B_array = backprop_net.get_backward_weights()

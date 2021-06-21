@@ -34,6 +34,9 @@ def main(params, dataset, per_images=10000):
         dataset_size = params["dataset_size"]
         random_seed = params["random_seed"]
 
+    # set random seed
+    torch.manual_seed(random_seed)
+
     # set width of terminal output for numpy arrays
     np.set_printoptions(linewidth=160)
 
