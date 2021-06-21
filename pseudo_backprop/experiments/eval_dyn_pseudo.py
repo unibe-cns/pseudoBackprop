@@ -124,6 +124,8 @@ def main(params, val_epoch = None, per_images=10000):
     back_norm_weights_array = []
     cos_array = []
     cos = [0]*(len(layers)-1)
+    dist_array = []
+    dist = [0]*(len(layers)-1)
 
     epoch_array = []
     image_array = []
@@ -154,9 +156,9 @@ def main(params, val_epoch = None, per_images=10000):
         loss_array.append(loss)
         conf_matrix_array[index] = confusion_matrix.tolist()
         error_ratio_array.append(1 - class_ratio)
-        
+
         logging.info(f'The final classification ratio is: {class_ratio}')
-        logging.info(f'The final loss function: {loss}')
+        # logging.info(f'The final loss function: {loss}')
         # logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
 
         # extract the backwards matrix at this stage
@@ -185,25 +187,44 @@ def main(params, val_epoch = None, per_images=10000):
             logging.info(f'The cosine between the backwards weights and the data-specific pseudoinverse '
                                  f'in layer {layer} is: {cos[layer]}')
 
+            # as an alternative measure of convergence, we also
+            # calculate the distance between tensors
+            dist[layer] = np.round(
+                exp_aux.norm_distance(
+                    torch.from_numpy(back_weights_array[-1][layer].T),
+                    dataspecPinv_array[layer].float()
+                    ).tolist()
+                ,6)
+            logging.info(f'The distance between the backwards weights and the data-specific pseudoinverse '
+                                 f'in layer {layer} is: {dist[layer]}')
+
             # calculate norm of weights for later analysis
             fw_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(fw_weights_array[-1][layer]))
             logging.info(f'The norm of the forward weights in layer {layer} is: {fw_norm_weights[layer]}')
             back_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer]))
             logging.info(f'The norm of the backward weights in layer {layer} is: {back_norm_weights[layer]}')
         
+        dist_array.append(dist.copy())
         cos_array.append(cos.copy())
         fw_norm_weights_array.append(fw_norm_weights.copy())
         back_norm_weights_array.append(back_norm_weights.copy())
 
     # Save the results into an appropriate file into the model folder
     layer_names = [str(i) for i in list(range(len(cos_array[-1])))]
-    to_save = np.array([epoch_array, image_array])
-    to_save = np.concatenate((to_save, np.array(fw_norm_weights_array).T, np.array(back_norm_weights_array).T, np.array(cos_array).T), axis=0).T
+    to_save = np.array([epoch_array, image_array, error_ratio_array])
+    to_save = np.concatenate(
+        (to_save, np.array(fw_norm_weights_array).T,
+            np.array(back_norm_weights_array).T,
+            np.array(cos_array).T,
+            np.array(dist_array).T),
+        axis=0).T
     file_to_save_cos = os.path.join(model_folder, f'train_results_dyn_pseudo.csv')
-    header = ('epochs, images, '
+    header = ('epochs, images, error, '
              + 'W layer ' + ', W layer '.join([layer for layer in layer_names])
              + ', B layer ' + ', B layer '.join([layer for layer in layer_names])
-             + ', cos layer ' + ', cos layer '.join([layer for layer in layer_names]))
+             + ', cos layer ' + ', cos layer '.join([layer for layer in layer_names])
+             + ', dist layer ' + ', dist layer '.join([layer for layer in layer_names])
+             )
     np.savetxt(file_to_save_cos, to_save, delimiter=',',
                        header=header)
     logging.info(f'Saved results to train_results_dyn_pseudo.csv')

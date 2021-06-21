@@ -32,7 +32,7 @@ def main(params, dataset, per_images=10000):
 
     if dataset_type == "yinyang":
         dataset_size = params["dataset_size"]
-        random_seed = params["random_seed"]
+    random_seed = params["random_seed"]
 
     # set random seed
     torch.manual_seed(random_seed)

@@ -60,3 +60,8 @@ def cosine_similarity_tensors(A, B):
 
     # returns cos(theta)
     return product / norm
+
+# alternative measure for the distance of two tensors
+def norm_distance(A,B):
+
+    return torch.linalg.norm(A - B)**2 / torch.linalg.norm(A) / torch.linalg.norm(B)
