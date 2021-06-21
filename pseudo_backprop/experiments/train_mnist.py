@@ -37,7 +37,10 @@ def main(params):
     learning_rate = params["learning_rate"]
     if model_type == 'dyn_pseudo':
         backwards_learning_rate = params["backwards_learning_rate"]
-        size_of_regularizer = params["size_of_regularizer"]
+        regularizer_array = params["size_of_regularizers"]
+        if len(regularizer_array) != len(layers) - 1:
+            raise ValueError(f"Number of given values for the regularizer ({len(regularizer_array)})\
+                does not match number of backward matrices ({len(layers) - 1})")
         regularizer_decay = params["regularizer_decay"]
     momentum = params["momentum"]
     weight_decay = params["weight_decay"]
@@ -109,7 +112,7 @@ def main(params):
                 sampler=rand_sampler)
             genpseudo_iterator = iter(genpseudo_samp)
         # (dyn pseudo needs all data to calculate mismatch energy)
-        if model_type == "dyn_pseudo":
+        if False and model_type == "dyn_pseudo":
             data_samp = torch.utils.data.DataLoader(
                 trainset,
                 batch_size=len(trainset))
@@ -157,13 +160,13 @@ def main(params):
 
     # for dyn pseudo, calculate the matrix Gamma
     # (sqrt of the autocorrelation) to calculate mismatch energy
-    if model_type == 'dyn_pseudo':
+    if False and model_type == 'dyn_pseudo':
         # initialise an array to save the mismatch energies
         mm_energy = []
         # count how often mismatch energy in each layer has been calculated
         # since last update of regularizer
         mm_energy_counter = [0 for layer in range(len(layers)-1)]
-        regularizer_array = [size_of_regularizer for layer in range(len(layers)-1)]
+        regularizer_array = [size_of_regularizers for layer in range(len(layers)-1)]
 
     # train the network
     counter = 0

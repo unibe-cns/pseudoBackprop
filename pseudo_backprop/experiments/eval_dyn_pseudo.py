@@ -124,7 +124,7 @@ def main(params, val_epoch = None, per_images=10000):
     back_norm_weights_array = []
     cos_array = []
     cos = [0]*(len(layers)-1)
-    
+
     epoch_array = []
     image_array = []
 
@@ -154,7 +154,10 @@ def main(params, val_epoch = None, per_images=10000):
         loss_array.append(loss)
         conf_matrix_array[index] = confusion_matrix.tolist()
         error_ratio_array.append(1 - class_ratio)
-
+        
+        logging.info(f'The final classification ratio is: {class_ratio}')
+        logging.info(f'The final loss function: {loss}')
+        # logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
 
         # extract the backwards matrix at this stage
         fw_weights_array.append(backprop_net.get_forward_weights().copy())
