@@ -7,7 +7,6 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
-from tqdm import tqdm
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 from pseudo_backprop.aux import *
@@ -204,7 +203,7 @@ def main(params):
 
         running_loss = 0.0
         logging.info(f'• Working on epoch {epoch}')
-        for index, data in enumerate(tqdm(trainloader), 0):
+        for index, data in enumerate(trainloader, 0):
             # redo the pseudo-inverse if applicable
             if model_type in ["pseudo_backprop", "gen_pseudo"]:
                 if counter % params["pinverse_recalc"] == 0:
