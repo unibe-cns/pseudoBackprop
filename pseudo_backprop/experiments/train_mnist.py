@@ -197,6 +197,10 @@ def main(params):
     if dataset_type == "yinyang": per_images = dataset_size // 10
     else: per_images = 10000
 
+    if len(trainset) % batch_size != 0:
+        raise ValueError(f"Number of data vectors ({len(trainset)}) is not divisible by batch size ({batch_size}). \
+                          This is required in this implementation in order to save the model every {per_images} updates.")
+
     # train the network
     counter = 0
     for epoch in range(epochs):  # loop over the dataset multiple times
