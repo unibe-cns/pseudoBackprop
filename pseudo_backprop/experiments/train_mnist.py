@@ -35,13 +35,35 @@ def main(params):
     model_folder = params["model_folder"]
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
+
     if model_type == 'dyn_pseudo':
-        backwards_learning_rate = params["backwards_learning_rate"]
-        regularizer_array = params["size_of_regularizers"]
-        if len(regularizer_array) != len(layers) - 1:
-            raise ValueError(f"Number of given values for the regularizer ({len(regularizer_array)})\
-                does not match number of backward matrices ({len(layers) - 1})")
-        regularizer_decay = params["regularizer_decay"]
+
+        # bw learning rate can be given as an array or single value
+        if not isinstance(params["backwards_learning_rate"], list):
+            backwards_learning_rate = [params["backwards_learning_rate"]] * (len(layers) - 1)
+        elif len(params["backwards_learning_rate"]) == len(layers) - 1:
+            backwards_learning_rate = params["backwards_learning_rate"]
+        else:
+            raise ValueError(f"Number of given values for backwards learning rates\
+                does not match number of backward matrices ({len(layers) - 1})\
+                (if all entries are equal, the value can also be given as a scalar).")
+
+        # regularizer can be given as an array or single value
+        if not isinstance(params["size_of_regularizer"], list):
+            regularizer_array = [params["size_of_regularizer"]] * (len(layers) - 1)
+        elif len(params["size_of_regularizer"]) == len(layers) - 1:
+            regularizer_array = params["size_of_regularizer"]
+        else:
+            raise ValueError(f"Number of given values for the regularizer\
+                does not match number of backward matrices ({len(layers) - 1})\
+                (if all entries are equal, the value can also be given as a scalar).")
+
+        if not params["regularizer_decay"]:
+            regularizer_fixed = True
+        else:
+            regularizer_fixed = False
+            regularizer_decay = params["regularizer_decay"]
+        
     momentum = params["momentum"]
     weight_decay = params["weight_decay"]
     if "dataset" not in params:
@@ -56,6 +78,19 @@ def main(params):
     if dataset_type == "yinyang":
         dataset_size = params["dataset_size"]
     random_seed = params["random_seed"]
+
+    logging.info(f'Parameters loaded.')
+    logging.info(f'Dataset: {dataset_type}')
+    logging.info(f'Random seed: {random_seed}')
+    logging.info(f'Learning rate: {learning_rate}')
+    if model_type == 'dyn_pseudo':
+        logging.info(f'Backwards learning rate: {backwards_learning_rate}')
+        logging.info(f'Regularizer: {regularizer_array}')
+        if not regularizer_fixed:
+            logging.info(f'Regularizer is dynamical. Evaluating mismatch energy every time model is saved.')
+            logging.info(f'Regularizer decay: {regularizer_decay}')
+        else:
+            logging.info(f'Regularizer is fixed. Deactivating evaluation of mismatch energy.')
 
     # set random seed
     torch.manual_seed(random_seed)
@@ -112,7 +147,7 @@ def main(params):
                 sampler=rand_sampler)
             genpseudo_iterator = iter(genpseudo_samp)
         # (dyn pseudo needs all data to calculate mismatch energy)
-        if False and model_type == "dyn_pseudo":
+        if not regularizer_fixed and model_type == "dyn_pseudo":
             data_samp = torch.utils.data.DataLoader(
                 trainset,
                 batch_size=len(trainset))
@@ -121,6 +156,11 @@ def main(params):
             if PRINT_DEBUG: logging.info(f'Time to load data: {time.time()-timer}s')
             # calling the second dataloader changes the RNG state, so we reset
             torch.manual_seed(random_seed)
+            # initialise an array to save the mismatch energies
+            mm_energy = []
+            # count how often mismatch energy in each layer has been calculated
+            # since last update of regularizer
+            mm_energy_counter = [0 for layer in range(len(layers)-1)]
 
     logging.info("Datasets are loaded")
 
@@ -157,16 +197,6 @@ def main(params):
     # define how often we shall print and output
     if dataset_type == "yinyang": per_images = dataset_size // 10
     else: per_images = 10000
-
-    # for dyn pseudo, calculate the matrix Gamma
-    # (sqrt of the autocorrelation) to calculate mismatch energy
-    if False and model_type == 'dyn_pseudo':
-        # initialise an array to save the mismatch energies
-        mm_energy = []
-        # count how often mismatch energy in each layer has been calculated
-        # since last update of regularizer
-        mm_energy_counter = [0 for layer in range(len(layers)-1)]
-        regularizer_array = [size_of_regularizers for layer in range(len(layers)-1)]
 
     # train the network
     counter = 0
@@ -222,7 +252,7 @@ def main(params):
                     backprop_net.synapses[i].weight_back.grad += regularizer_array[i] * backprop_net.synapses[i].get_backward()
                     # multiply by backwards learning rate
                     # (optimizer multiplies this with learning_rate)
-                    backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate / learning_rate
+                    backprop_net.synapses[i].weight_back.grad *= backwards_learning_rate[i] / learning_rate
 
             optimizer.step()
             #scheduler.step()
@@ -243,8 +273,9 @@ def main(params):
                 torch.save(backprop_net.state_dict(),
                            path_to_save)
 
-                if False and model_type == 'dyn_pseudo':
-                    # calculate mismatch energy
+                if not regularizer_fixed and model_type == 'dyn_pseudo':
+                    # if the regularizer is not fixed, calculate mismatch energy
+                    # to check if it needs to be updated
                     W_array = backprop_net.get_forward_weights()
                     B_array = backprop_net.get_backward_weights()
 
@@ -282,31 +313,6 @@ def main(params):
                                     regularizer_array[i] = 0
                                 # reset mismatch energy counter in the layer
                                 mm_energy_counter[i] = 0
-
-                # if PRINT_DEBUG and model_type == 'dyn_pseudo' or model_type == 'fa':
-                # print the grad of the forward weights
-                    # for i in range(len(backprop_net.synapses)):
-                    #     print('Frobenius norm of forward weights for synapse:', i)
-                    #     print(torch.linalg.norm(backprop_net.synapses[i].get_forward()))
-                    # print the grad of the backwards weights
-                    # for i in range(len(backprop_net.synapses)):
-                    #     print('Grad of forward weights for synapse:', i)
-                    #     print(backprop_net.synapses[i].weight.grad)
-                        # print('Frobenius norm of update of backwards weights for synapse', i,
-                        # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
-
-                    # for i in range(len(backprop_net.synapses)):
-                    #     print('Forward weights for synapse:', i)
-                    #     print(backprop_net.synapses[i].get_forward())
-                    # for i in range(len(backprop_net.synapses)):
-                    #     print('Backwards weights for synapse:', i)
-                    #     print(backprop_net.synapses[i].get_backward())
-                    #     print('Grad of backwards weights for synapse:', i)
-                    #    print(backprop_net.synapses[i].weight_back.grad)
-                    #    print('Frobenius norm of backwards weights ', i,
-                    #     ':', torch.linalg.norm(backprop_net.synapses[i].get_backward()))
-                    #    print('Frobenius norm of update of backwards weights for synapse for synapse ', i,
-                    # ':', torch.linalg.norm(backprop_net.synapses[i].weight_back.grad))
 
 
     logging.info('The training has finished after {} seconds'.format(time.time() - t0))

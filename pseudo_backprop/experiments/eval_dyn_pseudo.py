@@ -192,6 +192,15 @@ def main(params, val_epoch = None, per_images=10000):
             dist[layer] = np.round(
                 exp_aux.norm_distance(
                     torch.from_numpy(back_weights_array[-1][layer].T),
+                    torch.linalg.pinv(torch.from_numpy(fw_weights_array[-1][layer]))
+                    ).tolist()
+                ,6)
+            logging.info(f'The distance between the backwards weights and the (!) pseudoinverse '
+                                 f'in layer {layer} is: {dist[layer]}')
+
+            dist[layer] = np.round(
+                exp_aux.norm_distance(
+                    torch.from_numpy(back_weights_array[-1][layer].T),
                     dataspecPinv_array[layer].float()
                     ).tolist()
                 ,6)
