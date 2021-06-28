@@ -8,10 +8,11 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
-from tqdm import tqdm
+from torch import nn
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 from pseudo_backprop.aux import evaluate_model
+from pseudo_backprop.aux import loss_error
 
 
 torch.autograd.set_detect_anomaly(True)
@@ -124,11 +125,15 @@ def main(params, val_epoch = None, per_images=10000):
     back_norm_weights_array = []
     cos_array = []
     cos = [0]*(len(layers)-1)
+    cos_vecs_array = []
+    cos_vecs = [0]*(len(layers)-1)
     dist_array = []
     dist = [0]*(len(layers)-1)
 
     epoch_array = []
     image_array = []
+
+    cos_sim_vec = nn.CosineSimilarity(dim=0, eps=1e-6)
 
     for index in range(epochs * nb_batches + 1):
         epoch = 0 if index == 0 else (index - 1) // nb_batches
@@ -151,6 +156,10 @@ def main(params, val_epoch = None, per_images=10000):
         loss, confusion_matrix = evaluate_model(backprop_net, trainloader,
                                                 batch_size, device,
                                                 nb_classes)
+        # load the error vector for later usage
+        error_vec_out = loss_error(backprop_net, trainloader,
+                                             batch_size, device,
+                                             nb_classes)
         class_ratio = (confusion_matrix.diagonal().sum() /
                        confusion_matrix.sum())
         loss_array.append(loss)
@@ -170,9 +179,43 @@ def main(params, val_epoch = None, per_images=10000):
 
         dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
 
-        logging.info("Data-specific pseudoinverse matrices calculated")
+        # error vectors per layer are saved in order from output to first layer
+        error_vecs_B = [error_vec_out]
+
+        # append error vectors in other layers:
+        for layer in range(len(layers) -2, -1, -1):
+        
+            error_vecs_B.append(
+                torch.matmul(
+                    torch.from_numpy(back_weights_array[-1][layer].T), 
+                        error_vecs_B[-1]))
+
+        # calculate same for ds-pinv of W to compare
+        error_vecs_dspinv = [error_vec_out]
+        for layer in range(len(layers) -2, -1, -1):
+        
+            error_vecs_dspinv.append(
+                torch.matmul(
+                    dataspecPinv_array[layer].float(), 
+                        error_vecs_dspinv[-1]))
+
+        # note: error vectors are order from output to first layer
+        # print(error_vecs)
 
         for layer in range(len(layers)-1):
+            # calculate the cosine similarity using the Frobenius norm
+            # between the error backpropagated using the data-specific pseudoinverse
+            # and the dynamical backwards matrix
+            cos_vecs[layer] = np.round(
+                cos_sim_vec(error_vecs_B[-1-layer],error_vecs_dspinv[-1-layer]).tolist()
+                ,6)
+                
+            if cos_vecs[layer] > 1 or cos_vecs[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos_vecs[layer]}")
+            logging.info(f'The cosine between the errors propagated using the '
+                         f'backwards weights and the data-specific pseudoinverse '
+                         f'in layer {layer} is: {cos_vecs[layer]}')
+
             # calculate the cosine similarity using the Frobenius norm
             # between the data-specific pseudoinverse
             # and the dynamical backwards matrix
@@ -215,6 +258,7 @@ def main(params, val_epoch = None, per_images=10000):
         
         dist_array.append(dist.copy())
         cos_array.append(cos.copy())
+        cos_vecs_array.append(cos_vecs.copy())
         fw_norm_weights_array.append(fw_norm_weights.copy())
         back_norm_weights_array.append(back_norm_weights.copy())
 
@@ -224,6 +268,7 @@ def main(params, val_epoch = None, per_images=10000):
     to_save = np.concatenate(
         (to_save, np.array(fw_norm_weights_array).T,
             np.array(back_norm_weights_array).T,
+            np.array(cos_vecs_array).T,
             np.array(cos_array).T,
             np.array(dist_array).T),
         axis=0).T
@@ -231,8 +276,9 @@ def main(params, val_epoch = None, per_images=10000):
     header = ('epochs, images, error, '
              + 'W layer ' + ', W layer '.join([layer for layer in layer_names])
              + ', B layer ' + ', B layer '.join([layer for layer in layer_names])
-             + ', cos layer ' + ', cos layer '.join([layer for layer in layer_names])
-             + ', dist layer ' + ', dist layer '.join([layer for layer in layer_names])
+             + ', cos vec layer ' + ', cos vec layer '.join([layer for layer in layer_names])
+             + ', cos mat layer ' + ', cos mat layer '.join([layer for layer in layer_names])
+             + ', dist mat layer ' + ', dist mat layer '.join([layer for layer in layer_names])
              )
     np.savetxt(file_to_save_cos, to_save, delimiter=',',
                        header=header)

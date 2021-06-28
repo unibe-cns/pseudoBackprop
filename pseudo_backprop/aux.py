@@ -49,6 +49,50 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
 
     return loss, confusion_matrix
 
+def loss_error(network_model, testloader, batch_size, device='cpu',
+                   nb_classes=10):
+    """
+    Evaluate the model on the given dataset and return the error vector
+
+    Params:
+        network_model: FullyConnectedNetwork object containing the neural
+                       network
+        testloader: the testloader object from torch
+        batch_size: batch size
+        device (str, optional): 'gpu' or 'cpu' according to the availability
+
+    Returns:
+        error: (target - output) vector of shape (output_neurons,)
+               averaged over whole batch
+               as torch array
+    """
+    # pylint: disable=R0914
+
+    y_onehot = torch.empty(batch_size, nb_classes, device=device)
+    y_onehot.to(device)
+    error = torch.zeros(batch_size, nb_classes, device=device)
+    error.to(device)
+    # turn off gathering the gradient for testing
+    with torch.no_grad():
+        for data in testloader:
+            images, labels = data[0].to(device), data[1].to(device)
+            images = images.float()     # for yinyang, we need to convert to float32
+            images = images.view(batch_size, -1)
+            outputs = network_model(images)
+            y_onehot.zero_()
+            unsq_label = labels.unsqueeze(1)
+            y_onehot.to(device)
+            unsq_label.to(device)
+            y_onehot.scatter_(1, unsq_label, 1)
+            error += (y_onehot - outputs)
+
+    # sum over batch
+    error = torch.sum(error, dim=0)
+    # divide by number of samples to get averaged error
+    error /= (len(testloader) * batch_size)
+
+    return error
+
 def torchcov(m, rowvar=True, inplace=False):
     # implements covariance estimator 
     # via https://discuss.pytorch.org/t/covariance-and-gradient-support/16217/4
