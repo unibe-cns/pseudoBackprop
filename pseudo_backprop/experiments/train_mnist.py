@@ -62,6 +62,10 @@ def main(params):
         else:
             regularizer_fixed = False
             regularizer_decay = params["regularizer_decay"]
+
+    # all other models have no regularizer, so set to false
+    else:
+        regularizer_fixed = False
         
     momentum = params["momentum"]
     weight_decay = params["weight_decay"]
