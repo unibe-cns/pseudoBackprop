@@ -117,6 +117,11 @@ def main(params):
                                                 train=True,
                                                 download=True,
                                                 transform=transform)
+    elif dataset_type == "imagenet":
+        trainset = torchvision.datasets.ImageNet(params["dataset_path"],
+                                                train=True,
+                                                download=True,
+                                                transform=transform)
     # yinyang is not officially implemented by torchvision, so we load it by hand:
     elif dataset_type == "yinyang":
         trainset = YinYangDataset(size = dataset_size, seed = random_seed)
@@ -129,7 +134,7 @@ def main(params):
                                               transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10', 'yinyang']".format(
+                          Choose from ['mnist', 'cifar10', 'imagenet', 'yinyang']".format(
             dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
