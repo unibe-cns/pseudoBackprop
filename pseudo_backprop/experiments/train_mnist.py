@@ -9,6 +9,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
+from pseudo_backprop.experiments.parity_dataset.dataset import ParityDataset
 from pseudo_backprop.aux import *
 
 torch.autograd.set_detect_anomaly(True)
@@ -78,7 +79,7 @@ def main(params):
     else:
         optimizer_type = params["optimizer"]
 
-    if dataset_type == "yinyang":
+    if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
     random_seed = params["random_seed"]
 
@@ -126,6 +127,10 @@ def main(params):
     elif dataset_type == "yinyang":
         trainset = YinYangDataset(size = dataset_size, seed = random_seed)
         trainset.classes = trainset.class_names
+    # implemntation of parity dataset:
+    elif dataset_type == "parity":
+        trainset = ParityDataset(inputs = layers[0], samples=dataset_size, seed = random_seed)
+        trainset.classes = trainset.class_names
 
     elif dataset_type == "mnist":
         trainset = torchvision.datasets.MNIST(params["dataset_path"],
@@ -134,7 +139,7 @@ def main(params):
                                               transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10', 'imagenet', 'yinyang']".format(
+                          Choose from ['mnist', 'cifar10', 'imagenet', 'yinyang', 'parity']".format(
             dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=2)
@@ -204,6 +209,7 @@ def main(params):
 
     # define how often we shall print and output
     if dataset_type == "yinyang": per_images = dataset_size // 10
+    elif dataset_type == "parity": per_images = dataset_size // 2
     else: per_images = 10000
 
     if len(trainset) % batch_size != 0:
@@ -240,7 +246,7 @@ def main(params):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data[0].to(device), data[1].to(device)
             # for yinyang, need to convert to float32 because data is in float64
-            if dataset_type == "yinyang": inputs = inputs.float()
+            if dataset_type in ["yinyang", "parity"]: inputs = inputs.float()
 
             inputs = inputs.view(batch_size, -1)
 

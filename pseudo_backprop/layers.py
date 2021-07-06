@@ -410,6 +410,9 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
         grad_input = grad_output.mm(back_weight)
         # calculate the gradients on the weights
         grad_weight = grad_output.t().mm(input_torch)
+        # if option normalize active, divide by norm^2 of input
+        # if True:
+        #     grad_weight /= torch.linalg.norm(input_torch)**2
         # calculate the gradient on the backwards weights
         # note that the backwards learning rate and the regularizer
         # are applied before the optimizer call in train_mnist
@@ -433,7 +436,7 @@ class DynPseudoBackpropModule(nn.Module):
         Define a module of synapses for dynamical pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True):
+    def __init__(self, input_size, output_size, normalize=False, bias=True):
         """
             dynamical pseudobackprop module with initilaization
 
@@ -458,6 +461,9 @@ class DynPseudoBackpropModule(nn.Module):
         self.weight = nn.Parameter(torch.Tensor(self.output_size,
                                                 self.input_size),
                                    requires_grad=True)
+
+        # whether to divide weight update by norm of inputs
+        self.normalize = normalize
 
         # create a variable for the feedback weights
         # these are going to be dynamical, so we require grad
@@ -511,3 +517,24 @@ class DynPseudoBackpropModule(nn.Module):
         """
 
         return self.weight_back.clone().detach()
+
+
+# class LazyConv2d(DynPseudoBackpropModule):
+#     """
+#         Modifies the base module to be a lazy conv2d layer
+#     """
+
+#     def __init__(self):
+#         super().__init__()
+#         self.fc1 = torch.nn.LazyLinear(10)
+
+#     def forward(self, input_tensor):
+#         """
+#             Method to calculate the forward processing through the synapses
+#         """
+
+#         return self.fc1(input_tensor,
+#                             self.weight,
+#                             self.weight_back,
+#                             self.bias)
+

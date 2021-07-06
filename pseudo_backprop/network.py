@@ -38,6 +38,36 @@ class FullyConnectedNetwork(torch.nn.Module):
         # create the synapse
         if mode is not None:
             self.mode = mode
+
+        # self.synapses =[]
+        # for index in range(self.num_layers - 1):
+        #     # if not conv layer
+        #     if not isinstance(self.layers[index], list) and not isinstance(self.layers[index + 1], list):
+        #         self.synapses.append(
+        #             synapse_module(self.layers[index],self.layers[index + 1])
+        #             )
+        #     # if next hidden layer is a conv layer
+        #     elif not isinstance(self.layers[index], list) and isinstance(self.layers[index + 1], list):
+        #         output_size = 
+        #         self.synapses.append(
+        #             synapse_module(self.layers[index], output_size)
+        #             )
+        #     # if current hidden layer is conv
+        #     elif isinstance(self.layers[index], list) and not isinstance(self.layers[index + 1], list):
+        #         input_size =
+        #         self.synapses.append(
+        #             synapse_module_conv2d(self.layers[index],self.layers[index + 1])
+        #             )
+        #      # if both are conv layers
+        #     elif isinstance(self.layers[index], list) and isinstance(self.layers[index + 1], list):
+        #         input_size =
+        #         output_size = 
+        #         self.synapses.append(
+        #             synapse_module_conv2d(input_size, output_size)
+        #             )
+        #     else:
+        #         raise ValueError(f'Parameter for layer {index} is not int or conv2d parameter array')
+
         self.synapses = [synapse_module(self.layers[index],
                                         self.layers[index + 1]) for index in
                          range(self.num_layers - 1)]
@@ -94,6 +124,15 @@ class FullyConnectedNetwork(torch.nn.Module):
         logging.info(
             "Network with dynamical pseudo-backprop is constructed.")
         return cls(layers, DynPseudoBackpropModule)
+
+    # def conv_layer():
+    #     """
+    #         adds a convolutional layer
+    #     """
+    #     logging.info(
+    #         "Convolutional 2d layer added.")
+
+    #     return 0
 
     def forward(self, inputs):
         """

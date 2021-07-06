@@ -10,6 +10,7 @@ from pseudo_backprop.aux import evaluate_model
 from pseudo_backprop.aux import generalized_pseudo
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
+from pseudo_backprop.experiments.parity_dataset.dataset import ParityDataset
 
 
 logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
@@ -30,7 +31,7 @@ def main(params, dataset, per_images=10000):
     else:
         dataset_type = params["dataset"]
 
-    if dataset_type == "yinyang":
+    if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
     random_seed = params["random_seed"]
 
@@ -53,7 +54,12 @@ def main(params, dataset, per_images=10000):
                                                transform=transform)
     # yinyang is not officially implemented by torchvision, so we load it by hand:
     elif dataset_type == "yinyang":
-        testset = YinYangDataset(size = dataset_size, seed = 41) # KM: implement different seed correctly
+        testset = YinYangDataset(size = dataset_size, seed = random_seed)
+        testset.classes = testset.class_names
+        # implemntation of parity dataset:
+    elif dataset_type == "parity":
+        testset = ParityDataset(inputs = layers[0], samples=dataset_size, seed = random_seed)
+        batch_size = params["batch_size"]
         testset.classes = testset.class_names
 
     elif dataset_type == "mnist":
@@ -63,7 +69,7 @@ def main(params, dataset, per_images=10000):
                                              transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10', 'yinyang']".format(dataset))
+                          Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=2)
     nb_classes = len(testset.classes)
@@ -81,6 +87,9 @@ def main(params, dataset, per_images=10000):
         nb_batches = int(50000 / per_images)
     elif dataset_type == "yinyang":
         per_images = 1000
+        nb_batches = int(dataset_size / per_images)
+    elif dataset_type == "parity":
+        per_images = dataset_size // 2
         nb_batches = int(dataset_size / per_images)
 
     # run over the output and evaluate the models
