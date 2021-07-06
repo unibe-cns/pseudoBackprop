@@ -365,7 +365,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
 
     # pylint: disable=W0221
     @staticmethod
-    def forward(ctx, input_torch, weight, back_weight, bias=None):
+    def forward(ctx, input_torch, weight, back_weight, bias=None, normalize=False):
         """
          the forward calculation
          this is a standard forward pass
@@ -376,6 +376,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             weight: the forward weight matrix
             back_weight: the backward weight matrix
             bias: tensor of the bias variables if applicable
+            normalize: whether to divide grad_weight by norm^2 of inputs
         """
 
         output = input_torch.mm(weight.t())
@@ -384,6 +385,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
 
         ctx.save_for_backward(input_torch, weight, back_weight, bias)
         ctx.intermediate_results = output
+        ctx.options = normalize
 
         return output
 
@@ -398,21 +400,23 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             ctx: context object to save variables for the backward pass,
                  where we have added the output of the forward pass
                  (the activation of the neuron after the current synapse,
-                  also referred to as somatic potential)
+                  also referred to as somatic potential).
+                  Also added normalize option
             grad_output: current gradient at the output of the forward pass
         """
 
         # get variables from the forward pass
         input_torch, weight, back_weight, bias = ctx.saved_variables
         activation = ctx.intermediate_results
+        normalize = ctx.options
 
         # calculate the gradients that are backpropagated
         grad_input = grad_output.mm(back_weight)
         # calculate the gradients on the weights
         grad_weight = grad_output.t().mm(input_torch)
         # if option normalize active, divide by norm^2 of input
-        # if True:
-        #     grad_weight /= torch.linalg.norm(input_torch)**2
+        if normalize:
+            grad_weight /= torch.linalg.norm(input_torch)**2
         # calculate the gradient on the backwards weights
         # note that the backwards learning rate and the regularizer
         # are applied before the optimizer call in train_mnist
@@ -427,7 +431,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
         else:
             grad_bias = None
 
-        return grad_input, grad_weight, grad_back_weight, grad_bias
+        return grad_input, grad_weight, grad_back_weight, grad_bias, None
 
 
 # pylint: disable=R0903
@@ -498,7 +502,8 @@ class DynPseudoBackpropModule(nn.Module):
         return DynPseudoBackpropLinearity.apply(input_tensor,
                                                 self.weight,
                                                 self.weight_back,
-                                                self.bias)
+                                                self.bias,
+                                                self.normalize)
 
     def get_forward(self):
         """Get a detached clone of the forward weights

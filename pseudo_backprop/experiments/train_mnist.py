@@ -63,6 +63,10 @@ def main(params):
         else:
             regularizer_fixed = False
             regularizer_decay = params["regularizer_decay"]
+        if "normalize" in params:
+            normalize_inputs = params["normalize"]
+        else:
+            normalize_inputs = False
 
     # all other models have no regularizer, so set to false
     else:
@@ -95,6 +99,8 @@ def main(params):
             logging.info(f'Regularizer decay: {regularizer_decay}')
         else:
             logging.info(f'Regularizer is fixed. Deactivating evaluation of mismatch energy.')
+        if normalize_inputs:
+            logging.info(f'Normalize active: Dividing weight updates by norm^2.')
 
     # set random seed
     torch.manual_seed(random_seed)
@@ -211,6 +217,11 @@ def main(params):
     if dataset_type == "yinyang": per_images = dataset_size // 10
     elif dataset_type == "parity": per_images = dataset_size // 2
     else: per_images = 10000
+
+    # for dyn_pseudo, set normalizing of weights
+    if model_type == "dyn_pseudo":
+        for i in range(len(backprop_net.synapses)):
+            backprop_net.synapses[i].normalize = normalize_inputs
 
     if len(trainset) % batch_size != 0:
         raise ValueError(f"Number of data vectors ({len(trainset)}) is not divisible by batch size ({batch_size}). \
