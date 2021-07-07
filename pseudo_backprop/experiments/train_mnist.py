@@ -189,7 +189,7 @@ def main(params):
 
     # set up the optimizer and the loss function
     y_onehot = torch.empty(batch_size, nb_classes, device=device)
-    loss_function = torch.nn.MSELoss(reduction='sum')
+    loss_function = torch.nn.MSELoss(reduction='mean')
     if optimizer_type == 'SGD':
         optimizer = torch.optim.SGD(
             backprop_net.parameters(), lr=learning_rate, momentum=momentum,
