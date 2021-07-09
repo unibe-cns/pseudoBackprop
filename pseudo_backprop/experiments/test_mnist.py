@@ -122,9 +122,9 @@ def main(params, dataset, per_images=10000):
             norm_forward_weight = []
             norm_back_weight = []
             for i in range(len(backprop_net.synapses)):
-                       norm_forward_weight.append(np.linalg.norm(backprop_net.synapses[i].get_forward()))
+                       norm_forward_weight.append(np.linalg.norm(backprop_net.synapses[i].get_forward().cpu()))
                        # logging.info(f'The Frobenius norm of the forward weights in layer {i} is: {norm_forward_weight[-1]}')
-                       norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward()))
+                       norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward().cpu()))
                        # logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
 
             norm_forward_weight_array.append(np.array(norm_forward_weight.copy()).T)
