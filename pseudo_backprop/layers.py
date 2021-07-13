@@ -384,7 +384,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             output += torch.unsqueeze(bias, 0).expand_as(output)
 
         ctx.save_for_backward(input_torch, weight, back_weight, bias)
-        ctx.intermediate_results = output
+        ctx.intermediate_results = output.clone().detach()
         ctx.options = normalize
 
         return output
@@ -434,6 +434,9 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             grad_bias = grad_output.sum(0).squeeze(0)
         else:
             grad_bias = None
+
+        del activation
+        del ctx.intermediate_results
 
         return grad_input, grad_weight, grad_back_weight, grad_bias, None
 
