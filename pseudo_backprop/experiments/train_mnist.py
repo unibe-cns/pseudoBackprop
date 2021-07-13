@@ -16,7 +16,7 @@ torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
-PRINT_DEBUG = True
+PRINT_DEBUG = False
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
