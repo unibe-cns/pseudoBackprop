@@ -246,7 +246,7 @@ def main(params):
                             sub_data = genpseudo_iterator.next()[0].view(
                                 params["gen_samples"], -1).to(device)
                         except StopIteration:
-                            genpseudo_iterator = iter(data_samp)
+                            genpseudo_iterator = iter(genpseudo_samp)
                             sub_data = genpseudo_iterator.next()[0].view(
                                 params["gen_samples"], -1).to(device)
                         with torch.no_grad():
@@ -301,6 +301,10 @@ def main(params):
                 path_to_save = os.path.join(model_folder, file_to_save)
                 torch.save(backprop_net.state_dict(),
                            path_to_save)
+
+                if PRINT_DEBUG:
+                    B_array = backprop_net.get_backward_weights()
+                    print('Mean of bw arrays: ', [np.mean(array) for array in B_array])
 
                 if not regularizer_fixed and model_type == 'dyn_pseudo':
                     # if the regularizer is not fixed, calculate mismatch energy
