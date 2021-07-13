@@ -246,7 +246,7 @@ def main(params):
                             sub_data = genpseudo_iterator.next()[0].view(
                                 params["gen_samples"], -1).to(device)
                         except StopIteration:
-                            genpseudo_iterator = iter(data_samp)
+                            genpseudo_iterator = iter(genpseudo_samp)
                             sub_data = genpseudo_iterator.next()[0].view(
                                 params["gen_samples"], -1).to(device)
                         with torch.no_grad():
