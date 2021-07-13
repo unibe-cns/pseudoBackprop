@@ -302,7 +302,7 @@ def main(params):
                 torch.save(backprop_net.state_dict(),
                            path_to_save)
 
-                if PRINT_DEBUG:
+                if PRINT_DEBUG and model_type == 'dyn_pseudo':
                     B_array = backprop_net.get_backward_weights()
                     print('Mean of bw arrays: ', [np.mean(array) for array in B_array])
 
