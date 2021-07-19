@@ -417,9 +417,7 @@ class DynPseudoBackpropLinearity(torch.autograd.Function):
             grad_weight = grad_output.t().mm(input_torch)
         # if option normalize active, divide by norm^2 of input for each sample
         else:
-            grad_weight = torch.zeros(len(grad_output[0]),len(input_torch[0]))
-            for i in range(len(grad_output.t()[0])):
-                grad_weight += torch.outer(grad_output[i], input_torch[i]) / torch.linalg.norm(input_torch[i])**2
+            grad_weight = grad_output.t().mm(torch.linalg.pinv(input_torch.t()))
         # calculate the gradient on the backwards weights
         # note that the backwards learning rate and the regularizer
         # are applied before the optimizer call in train_mnist

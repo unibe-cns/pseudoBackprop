@@ -100,7 +100,7 @@ def main(params):
         else:
             logging.info(f'Regularizer is fixed. Deactivating evaluation of mismatch energy.')
         if normalize_inputs:
-            logging.info(f'Normalize active: Dividing weight updates by norm^2.')
+            logging.info(f'Normalize active: using pseudoinverse of activations instead of transpose.')
 
     # set random seed
     torch.manual_seed(random_seed)
