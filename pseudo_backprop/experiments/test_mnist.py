@@ -118,7 +118,18 @@ def main(params, dataset, per_images=10000):
         try:
             backprop_net.load_state_dict(torch.load(path_to_model))
         except FileNotFoundError:
+            # Save a final line with nan values
             logging.info(f'File not found. Check that model has trained successfully.')
+            epoch_array.append(epoch)
+            image_array.append(ims)
+            loss_array.append(np.nan)
+            error_ratio_array.append(np.nan)
+            norm_forward_weight_array.append(
+                    np.arange(len(backprop_net.synapses)) * np.nan
+                    )
+            norm_back_weight_array.append(
+                    np.arange(len(backprop_net.synapses)) * np.nan
+                    )
             break
 
         # Evaluate the model
@@ -155,7 +166,7 @@ def main(params, dataset, per_images=10000):
     to_save = np.array([epoch_array, image_array,
                         np.array(error_ratio_array), np.array(loss_array)]).T
     file_to_save = os.path.join(model_folder, f'results_{dataset}.csv')
-    np.savetxt(file_to_save, to_save, delimiter=',', fmt='%i %i %1.4f %1.4f',
+    np.savetxt(file_to_save, to_save, delimiter=',', fmt='%i, %i, %1.4f, %1.4f',
                header='epochs, images, error_ratio, loss')
     with open(os.path.join(model_folder,
                            f'confusion_matrix_{dataset}.json'), 'w') as file_f:
