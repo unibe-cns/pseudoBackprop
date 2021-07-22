@@ -229,6 +229,8 @@ def main(params):
     if len(trainset) % batch_size != 0:
         raise ValueError(f"Number of data vectors ({len(trainset)}) is not divisible by batch size ({batch_size}). \
                           This is required in this implementation in order to save the model every {per_images} updates.")
+    # set random seed
+    torch.manual_seed(random_seed)
 
     # train the network
     counter = 0
