@@ -19,7 +19,14 @@ logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
 
 # pylint: disable=R0914,R0915
 def main(params, dataset, per_images=10000):
-    """Run the testing on the mnist dataset."""
+    """
+    Run the testing on the mnist dataset.
+    
+    If training has failed (e.g. because of runaway weight matrices)
+    files are only written up to the last valid model snapshot 
+   
+    """
+
     # The metaparameter
     layers = params['layers']
     batch_size = 25  # for training this is optimized for speed
@@ -106,7 +113,12 @@ def main(params, dataset, per_images=10000):
                         f"{ims}.pth")
         logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
-        backprop_net.load_state_dict(torch.load(path_to_model))
+        try:
+            backprop_net.load_state_dict(torch.load(path_to_model))
+        except FileNotFoundError:
+            logging.info(f'File not found. Check that model has trained successfully.')
+            break
+
         # Evaluate the model
         loss, confusion_matrix = evaluate_model(backprop_net, testloader,
                                                 batch_size, device,

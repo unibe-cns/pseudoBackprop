@@ -21,6 +21,9 @@ PRINT_DEBUG = False
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
 
+    available_gpus = [torch.cuda.device(i) for i in range(torch.cuda.device_count())]
+    print(available_gpus)
+
     # time of initiation, used for timing
     t0 = time.time()
 
