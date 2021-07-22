@@ -105,6 +105,8 @@ def main(params, dataset, per_images=10000):
     error_ratio_array = []
     norm_forward_weight_array = []
     norm_back_weight_array = []
+    epoch_array = []
+    image_array = []
     for index in range(epochs * nb_batches + 1):
         epoch = 0 if index == 0 else (index - 1) // nb_batches
         ims = 0 if index == 0 else (((index - 1) % nb_batches) + 1) \
@@ -146,14 +148,14 @@ def main(params, dataset, per_images=10000):
         logging.info(f'The final loss function: {loss}')
         logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
 
+        epoch_array.append(epoch)
+        image_array.append(ims)
+
     # Save the results into an appropriate file into the model folder
-    epoch_array = np.arange(0, epochs + 0.001, 1/nb_batches)
-    image_array = np.arange(0, epochs * nb_batches * per_images + per_images,
-                            per_images)
     to_save = np.array([epoch_array, image_array,
                         np.array(error_ratio_array), np.array(loss_array)]).T
     file_to_save = os.path.join(model_folder, f'results_{dataset}.csv')
-    np.savetxt(file_to_save, to_save, delimiter=',',
+    np.savetxt(file_to_save, to_save, delimiter=',', fmt='%i %i %1.4f %1.4f',
                header='epochs, images, error_ratio, loss')
     with open(os.path.join(model_folder,
                            f'confusion_matrix_{dataset}.json'), 'w') as file_f:

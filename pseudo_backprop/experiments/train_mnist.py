@@ -12,7 +12,7 @@ from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 from pseudo_backprop.experiments.parity_dataset.dataset import ParityDataset
 from pseudo_backprop.aux import *
 
-torch.autograd.set_detect_anomaly(True)
+#torch.autograd.set_detect_anomaly(True)
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
