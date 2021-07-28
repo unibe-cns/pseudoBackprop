@@ -141,14 +141,19 @@ class VanillaBackpropModule(nn.Module):
         # Initialize the weights
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
         if self.weight_init == "uniform_":
-            torch.nn.init.uniform_(self.weight, a=-1*k_init,
-                                b=k_init)
+            # torch.nn.init.uniform_(self.weight, a=-1*k_init,
+            #                     b=k_init)
+            torch.nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
-        if bias:
-            torch.nn.init.uniform_(self.bias, a=-1*k_init,
-                                   b=k_init)
+        # if bias:
+        #     torch.nn.init.uniform_(self.bias, a=-1*k_init,
+        #                            b=k_init)
+        if self.bias is not None:
+            fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(self.weight)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            torch.nn.init.uniform_(self.bias, -bound, bound)
 
     def forward(self, input_tensor):
         """
