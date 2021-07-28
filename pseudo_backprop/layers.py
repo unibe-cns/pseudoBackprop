@@ -31,21 +31,142 @@ logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
 SCALING_FACTOR = 4
 
 # pylint: disable=W0223,W0212
-class VanillaLinear(torch.nn.Linear):
-    """Vanilla Linear
-       inherit from the torch.nn.Linear to make the init possible
+# class VanillaLinear(torch.nn.Linear):
+#     """Vanilla Linear
+#        inherit from the torch.nn.Linear to make the init possible
+#     """
+
+#     def reset_parameters(self) -> None:
+#         """reset and/or init the parameters
+#            largely taken from pytorch
+#         """
+#         fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(
+#             self.weight)
+#         bound = math.sqrt(SCALING_FACTOR / fan_in)
+#         torch.nn.init.uniform_(self.weight, -bound, bound)
+#         if self.bias is not None:
+#             torch.nn.init.uniform_(self.bias, -bound, bound)
+
+# The feedback alignment components
+# The following two functions inherit from torch functionalities to realize
+# the feedback alignement.
+
+# pylint: disable=W0223
+class VanillaBackpropLinearity(torch.autograd.Function):
+    """
+        The feedack alignment function
+        This defines the forward and the backwards directions
     """
 
-    def reset_parameters(self) -> None:
-        """reset and/or init the parameters
-           largely taken from pytorch
+    # pylint: disable=W0221
+    @staticmethod
+    def forward(ctx, input_torch, weight, bias=None):
         """
-        fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(
-            self.weight)
-        bound = math.sqrt(SCALING_FACTOR / fan_in)
-        torch.nn.init.uniform_(self.weight, -bound, bound)
-        if self.bias is not None:
-            torch.nn.init.uniform_(self.bias, -bound, bound)
+         the forward calculation
+
+         Params:
+            ctx: context object to save variables for the backward pass
+            input_torch: the input tensor
+            weight: the forward weight matrix
+            bias: tensor of the bias variables if applicable
+        """
+
+        ctx.save_for_backward(input_torch, weight, bias)
+        output = input_torch.mm(weight.t())
+        if bias is not None:
+            output += torch.unsqueeze(bias, 0).expand_as(output)
+
+        return output
+
+    # pylint: disable=W0221
+    @staticmethod
+    def backward(ctx, grad_output):
+        """
+            calculate the necessary gradients
+
+            Params:
+            ctx: context object to save variables for the backward pass
+            grad_output: current gradient at the output of the forward pass
+        """
+
+        # get variables from the forward pass
+        input_torch, weight, bias = ctx.saved_variables
+
+        # calculate the gradients that are backpropagated
+        grad_input = grad_output.mm(weight)
+        # calculate the gradients on the weights
+        grad_weight = grad_output.t().mm(input_torch)
+        if (bias is not None) and (ctx.needs_input_grad[2]):
+            # gradient at the bias if required
+            grad_bias = grad_output.sum(0).squeeze(0)
+        else:
+            grad_bias = None
+
+        return grad_input, grad_weight, grad_bias
+
+class VanillaBackpropModule(nn.Module):
+
+    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+        """
+            feedback alignement module with initilaization
+
+            Params:
+            input_size: input size of the module
+            output_size: output size
+                         The module represents a linear map of the size
+                         input_size X output_size
+        """
+
+        # call parent for proper init
+        super().__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.weight_init = weight_init
+        if bias:
+            logging.info('Bias is activated')
+        else:
+            logging.info('Bias is deactivated.')
+
+        # create the parameters
+        self.weight = nn.Parameter(torch.Tensor(self.output_size,
+                                                self.input_size),
+                                   requires_grad=True)
+        # create the biases if applicable
+        if bias:
+            self.bias = nn.Parameter(torch.Tensor(self.output_size),
+                                     requires_grad=True)
+        else:
+            self.register_buffer('bias', None)
+
+        # Initialize the weights
+        k_init = np.sqrt(SCALING_FACTOR/self.input_size)
+        if self.weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight, a=-1*k_init,
+                                b=k_init)
+        elif self.weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
+        if bias:
+            torch.nn.init.uniform_(self.bias, a=-1*k_init,
+                                   b=k_init)
+
+    def forward(self, input_tensor):
+        """
+            Method to calculate the forward processing through the synapses
+        """
+        # the forward calcualtion of the module
+        return VanillaBackpropLinearity.apply(input_tensor,
+                                                self.weight,
+                                                self.bias)
+
+    def get_forward(self):
+        """Get a detached clone of the forward weights
+
+        Returns:
+            torch.tensor: The forward weights
+        """
+
+        return self.weight.clone().detach()
 
 
 # The feedback alignment components
@@ -114,7 +235,7 @@ class FeedbackAlignmentModule(nn.Module):
         Define a module of synapses for the feedback alignement synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True):
+    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
         """
             feedback alignement module with initilaization
 
@@ -129,6 +250,8 @@ class FeedbackAlignmentModule(nn.Module):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
+        self.weight_init = weight_init
+        self.backwards_weight_init = backwards_weight_init
         if bias:
             logging.info('Bias is activated')
         else:
@@ -153,10 +276,19 @@ class FeedbackAlignmentModule(nn.Module):
 
         # Initialize the weights
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
-        torch.nn.init.uniform_(self.weight, a=-1*k_init,
-                               b=k_init)
-        torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
-                               b=k_init)
+        if self.weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight, a=-1*k_init,
+                                b=k_init)
+        elif self.weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
+
+        if self.backwards_weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
+                                b=k_init)
+        elif self.backwards_weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -276,6 +408,8 @@ class PseudoBackpropModule(nn.Module):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
+        self.weight_init = weight_init
+        self.backwards_weight_init = backwards_weight_init
         self.counter = 0
         if bias:
             logging.info('Bias is activated')
@@ -296,8 +430,19 @@ class PseudoBackpropModule(nn.Module):
 
         # Initialize the weights
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
-        torch.nn.init.uniform_(self.weight, a=-1*k_init,
-                               b=k_init)
+        if self.weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight, a=-1*k_init,
+                                b=k_init)
+        elif self.weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
+
+        if self.backwards_weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
+                                b=k_init)
+        elif self.backwards_weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
         # KM: this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
@@ -446,7 +591,7 @@ class DynPseudoBackpropModule(nn.Module):
         Define a module of synapses for dynamical pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, normalize=False, bias=True):
+    def __init__(self, input_size, output_size, normalize=False, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
         """
             dynamical pseudobackprop module with initilaization
 
@@ -461,6 +606,8 @@ class DynPseudoBackpropModule(nn.Module):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
+        self.weight_init = weight_init
+        self.backwards_weight_init = backwards_weight_init
         self.counter = 0
         if bias:
             logging.info('Bias is activated')
@@ -491,10 +638,19 @@ class DynPseudoBackpropModule(nn.Module):
 
         # Initialize the weights
         k_init = np.sqrt(SCALING_FACTOR/self.input_size)
-        torch.nn.init.uniform_(self.weight, a=-1*k_init,
-                               b=k_init)
-        torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
-                               b=k_init)
+        if self.weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight, a=-1*k_init,
+                                b=k_init)
+        elif self.weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
+
+        if self.backwards_weight_init == "uniform_":
+            torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
+                                b=k_init)
+        elif self.backwards_weight_init == "kaiming_normal_":
+            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+                                nonlinearity='relu')
 
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
