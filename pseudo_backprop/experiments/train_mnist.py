@@ -38,6 +38,23 @@ def main(params):
     model_folder = params["model_folder"]
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
+    if "weight_init" in params:
+            weight_init = params["weight_init"]
+    else:
+        weight_init = "uniform_"
+    if weight_init not in ["uniform_", "kaiming_normal_"]:
+        raise ValueError("The received initialization method <<{}>> is not implemented. \
+                          Choose from [uniform_, kaiming_normal_]".format(
+            weight_init))
+
+    if "backwards_weight_init" in params:
+        backwards_weight_init = params["backwards_weight_init"]
+    else:
+        backwards_weight_init = "uniform_"
+    if backwards_weight_init not in ["uniform_", "kaiming_normal_"]:
+        raise ValueError("The received initialization method <<{}>> is not implemented. \
+                          Choose from [uniform_, kaiming_normal_]".format(
+            backwards_weight_init))
 
     if model_type == 'dyn_pseudo':
 
@@ -93,6 +110,10 @@ def main(params):
     logging.info(f'Parameters loaded.')
     logging.info(f'Dataset: {dataset_type}')
     logging.info(f'Random seed: {random_seed}')
+    logging.info(f'Weight initialization method: {weight_init}')
+    if model_type != 'backprop':
+        logging.info(f'Backwards weight initialization method: {backwards_weight_init}')
+
     logging.info(f'Learning rate: {learning_rate}')
     if model_type == 'dyn_pseudo':
         logging.info(f'Backwards learning rate: {backwards_learning_rate}')
@@ -187,7 +208,7 @@ def main(params):
     logging.info("Datasets are loaded")
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers)
+    backprop_net = exp_aux.load_network(model_type, layers, weight_init, backwards_weight_init)
     backprop_net.to(device)
 
     # set up the optimizer and the loss function

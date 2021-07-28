@@ -6,7 +6,7 @@ import torch
 from pseudo_backprop.layers import FeedbackAlignmentModule
 from pseudo_backprop.layers import PseudoBackpropModule
 from pseudo_backprop.layers import DynPseudoBackpropModule
-from pseudo_backprop.layers import VanillaLinear
+from pseudo_backprop.layers import VanillaBackpropModule
 from pseudo_backprop import aux
 
 logging.basicConfig(format='Network modules -- %(levelname)s: %(message)s',
@@ -19,7 +19,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         Feedforward network with relu non-linearities between the modules
     """
 
-    def __init__(self, layers, synapse_module, mode=None):
+    def __init__(self, layers, synapse_module, mode=None, weight_init="uniform_", backwards_weight_init="uniform_"):
         """
             Initialize the network
 
@@ -69,7 +69,9 @@ class FullyConnectedNetwork(torch.nn.Module):
         #         raise ValueError(f'Parameter for layer {index} is not int or conv2d parameter array')
 
         self.synapses = [synapse_module(self.layers[index],
-                                        self.layers[index + 1]) for index in
+                                        self.layers[index + 1],
+                                        weight_init=weight_init,
+                                        backwards_weight_init=backwards_weight_init) for index in
                          range(self.num_layers - 1)]
 
         # look for gpu device, use gpu if available
@@ -84,46 +86,46 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.operations = torch.nn.Sequential(*self.operations_list)
 
     @classmethod
-    def backprop(cls, layers):
+    def backprop(cls, layers, weight_init, backwards_weight_init):
         """
             Delegating constructor for the backprop case
         """
         logging.info("Network with vanilla backpropagation is constructed.")
-        return cls(layers, VanillaLinear)
+        return cls(layers, VanillaBackpropModule, weight_init=weight_init, backwards_weight_init=backwards_weight_init)
 
     @classmethod
-    def feedback_alignement(cls, layers):
+    def feedback_alignement(cls, layers, weight_init, backwards_weight_init):
         """
             Delegating constructor for the feedback alignment case
         """
         logging.info("Network with feedback alignment is constructed.")
-        return cls(layers, FeedbackAlignmentModule)
+        return cls(layers, FeedbackAlignmentModule, weight_init=weight_init, backwards_weight_init=backwards_weight_init)
 
     @classmethod
-    def pseudo_backprop(cls, layers):
+    def pseudo_backprop(cls, layers, weight_init, backwards_weight_init):
         """
             Delegating constructor for the pseudo-backprop case
         """
         logging.info("Network with pseudo-backprop is constructed.")
-        return cls(layers, PseudoBackpropModule, mode='pseudo')
+        return cls(layers, PseudoBackpropModule, mode='pseudo', weight_init=weight_init, backwards_weight_init=backwards_weight_init)
 
     @classmethod
-    def gen_pseudo_backprop(cls, layers):
+    def gen_pseudo_backprop(cls, layers, weight_init, backwards_weight_init):
         """
             Delegating constructor for the generalized pseudo-backprop case
         """
         logging.info(
             "Network with generalized pseudo-backprop is constructed.")
-        return cls(layers, PseudoBackpropModule, mode='gen_pseudo')
+        return cls(layers, PseudoBackpropModule, mode='gen_pseudo', weight_init=weight_init, backwards_weight_init=backwards_weight_init)
 
     @classmethod
-    def dyn_pseudo_backprop(cls, layers):
+    def dyn_pseudo_backprop(cls, layers, weight_init, backwards_weight_init):
         """
             Delegating constructor for the dynamical pseudo-backprop case
         """
         logging.info(
             "Network with dynamical pseudo-backprop is constructed.")
-        return cls(layers, DynPseudoBackpropModule)
+        return cls(layers, DynPseudoBackpropModule, weight_init=weight_init, backwards_weight_init=backwards_weight_init)
 
     # def conv_layer():
     #     """
