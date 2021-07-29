@@ -287,7 +287,7 @@ class FeedbackAlignmentModule(nn.Module):
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
                                 b=k_init)
         elif self.backwards_weight_init == "kaiming_normal_":
-            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+            torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
@@ -441,7 +441,7 @@ class PseudoBackpropModule(nn.Module):
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
                                 b=k_init)
         elif self.backwards_weight_init == "kaiming_normal_":
-            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+            torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
         # KM: this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
@@ -649,7 +649,7 @@ class DynPseudoBackpropModule(nn.Module):
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
                                 b=k_init)
         elif self.backwards_weight_init == "kaiming_normal_":
-            torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
+            torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
 
         if bias:
