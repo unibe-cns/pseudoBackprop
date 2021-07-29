@@ -80,9 +80,10 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         # make the operations
         self.operations_list = []
-        for synapse in self.synapses:
+        for synapse in self.synapses[:-1]:
             self.operations_list.append(synapse)
             self.operations_list.append(torch.nn.ReLU(inplace=True))
+        self.operations_list.append(self.synapses[-1])
         self.operations = torch.nn.Sequential(*self.operations_list)
 
     @classmethod
