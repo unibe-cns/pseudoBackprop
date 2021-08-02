@@ -393,7 +393,7 @@ class PseudoBackpropModule(nn.Module):
         Define a module of synapses for the pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True):
+    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
         """
             pseudobackprop module with initilaization
 
@@ -437,12 +437,6 @@ class PseudoBackpropModule(nn.Module):
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
 
-        if self.backwards_weight_init == "uniform_":
-            torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
-                                b=k_init)
-        elif self.backwards_weight_init == "kaiming_normal_":
-            torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
-                                nonlinearity='relu')
         # KM: this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
