@@ -52,7 +52,8 @@ def main(params, val_epoch = None, per_images=10000):
     torch.manual_seed(params["random_seed"])
 
     # look for gpu device, use gpu if available
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     logging.info(f'The training starts on device {device}.')
 
     # set up the normalizer

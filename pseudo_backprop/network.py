@@ -240,9 +240,9 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         forward_weights = []
         for _, synapse in enumerate(self.synapses):
-            weights = synapse.get_forward().detach().numpy().copy()
+            weights = synapse.get_forward().detach().cpu().numpy().copy()
             forward_weights.append(weights)
-
+        
         return forward_weights
 
     def get_backward_weights(self):
@@ -250,7 +250,7 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         forward_weights = []
         for _, synapse in enumerate(self.synapses):
-            weights = synapse.get_backward().detach().numpy().copy()
+            weights = synapse.get_backward().detach().cpu().numpy().copy()
             forward_weights.append(weights)
 
         return forward_weights
