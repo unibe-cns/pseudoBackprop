@@ -151,7 +151,7 @@ def main(params, val_epoch = None, per_images=10000):
                         f"{ims}.pth")
         logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
-        backprop_net.load_state_dict(torch.load(path_to_model))
+        backprop_net.load_state_dict(torch.load(path_to_model, map_location=torch.device('cpu')))
 
         # evaluate the model using the train data set
         loss, confusion_matrix = evaluate_model(backprop_net, trainloader,

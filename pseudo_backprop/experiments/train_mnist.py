@@ -16,7 +16,7 @@ from pseudo_backprop.aux import *
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
-PRINT_DEBUG = False
+PRINT_DEBUG = True
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
@@ -38,22 +38,26 @@ def main(params):
     model_folder = params["model_folder"]
     model_type = params["model_type"]
     learning_rate = params["learning_rate"]
+    if "bias" in params:
+            bias = params["bias"]
+    else:
+        bias = True
     if "weight_init" in params:
             weight_init = params["weight_init"]
     else:
         weight_init = "uniform_"
-    if weight_init not in ["uniform_", "kaiming_normal_"]:
+    if weight_init not in ["uniform_", "kaiming_normal_", "zeros_"]:
         raise ValueError("The received initialization method <<{}>> is not implemented. \
-                          Choose from [uniform_, kaiming_normal_]".format(
+                          Choose from [uniform_, kaiming_normal_, zeros_]".format(
             weight_init))
 
     if "backwards_weight_init" in params:
         backwards_weight_init = params["backwards_weight_init"]
     else:
         backwards_weight_init = "uniform_"
-    if backwards_weight_init not in ["uniform_", "kaiming_normal_"]:
+    if backwards_weight_init not in ["uniform_", "kaiming_normal_", "zeros_"]:
         raise ValueError("The received initialization method <<{}>> is not implemented. \
-                          Choose from [uniform_, kaiming_normal_]".format(
+                          Choose from [uniform_, kaiming_normal_, zeros_]".format(
             backwards_weight_init))
 
     if model_type == 'dyn_pseudo':
@@ -110,6 +114,7 @@ def main(params):
     logging.info(f'Parameters loaded.')
     logging.info(f'Dataset: {dataset_type}')
     logging.info(f'Random seed: {random_seed}')
+    logging.info(f'Bias activated' if bias else 'Bias deactivated')
     logging.info(f'Weight initialization method: {weight_init}')
     if model_type != 'backprop':
         logging.info(f'Backwards weight initialization method: {backwards_weight_init}')
@@ -208,7 +213,7 @@ def main(params):
     logging.info("Datasets are loaded")
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers, weight_init, backwards_weight_init)
+    backprop_net = exp_aux.load_network(model_type, layers, weight_init, backwards_weight_init, bias)
     backprop_net.to(device)
 
     # set up the optimizer and the loss function
@@ -327,6 +332,16 @@ def main(params):
                 path_to_save = os.path.join(model_folder, file_to_save)
                 torch.save(backprop_net.state_dict(),
                            path_to_save)
+
+                if PRINT_DEBUG:
+                    for i in range(len(backprop_net.synapses)):
+                        logging.info(f"Norm of weights in layer {i}: {torch.linalg.norm(backprop_net.synapses[i].get_forward())}")
+                        logging.info(f"Weight update in layer {i}: {backprop_net.synapses[i].weight.grad}") 
+                        #logging.info(f"Weights in layer {i}: {backprop_net.synapses[i].get_forward()}")
+                        if model_type != 'backprop':
+                            #logging.info(f"Backwards weights in layer {i}: {backprop_net.synapses[i].get_backward()}")
+                            logging.info(f"Norm of backwards weights in layer {i}: {torch.linalg.norm(backprop_net.synapses[i].get_backward())}")
+
 
                 if PRINT_DEBUG and model_type == 'dyn_pseudo':
                     B_array = backprop_net.get_backward_weights()

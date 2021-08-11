@@ -146,6 +146,8 @@ class VanillaBackpropModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -282,6 +284,8 @@ class FeedbackAlignmentModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
 
         if self.backwards_weight_init == "uniform_":
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
@@ -289,6 +293,8 @@ class FeedbackAlignmentModule(nn.Module):
         elif self.backwards_weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.backwards_weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight_back)
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -436,6 +442,8 @@ class PseudoBackpropModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
 
         # KM: this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
@@ -638,6 +646,8 @@ class DynPseudoBackpropModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
 
         if self.backwards_weight_init == "uniform_":
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
@@ -645,6 +655,8 @@ class DynPseudoBackpropModule(nn.Module):
         elif self.backwards_weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.backwards_weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight_back)
 
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
