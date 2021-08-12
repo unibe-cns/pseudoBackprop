@@ -16,13 +16,10 @@ from pseudo_backprop.aux import *
 logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
-PRINT_DEBUG = True
+PRINT_DEBUG = False
 
 # pylint: disable=R0914,R0915,R0912,R1702
 def main(params):
-
-    available_gpus = [torch.cuda.device(i) for i in range(torch.cuda.device_count())]
-    print(available_gpus)
 
     # time of initiation, used for timing
     t0 = time.time()
@@ -43,13 +40,15 @@ def main(params):
     else:
         bias = True
     if "weight_init" in params:
-            weight_init = params["weight_init"]
+        weight_init = params["weight_init"]
     else:
         weight_init = "uniform_"
     if weight_init not in ["uniform_", "kaiming_normal_", "zeros_"]:
         raise ValueError("The received initialization method <<{}>> is not implemented. \
                           Choose from [uniform_, kaiming_normal_, zeros_]".format(
             weight_init))
+    weight_rescale = params["weight_rescale"] if "weight_rescale" in params else 1
+    back_weight_rescale = params["backwards_weight_rescale"] if "backwards_weight_rescale" in params else 1
 
     if "backwards_weight_init" in params:
         backwards_weight_init = params["backwards_weight_init"]
@@ -116,8 +115,10 @@ def main(params):
     logging.info(f'Random seed: {random_seed}')
     logging.info(f'Bias activated' if bias else 'Bias deactivated')
     logging.info(f'Weight initialization method: {weight_init}')
+    logging.info(f'Weights are rescaled by {weight_rescale}') if weight_rescale != 1 else True
     if model_type != 'backprop':
         logging.info(f'Backwards weight initialization method: {backwards_weight_init}')
+        logging.info(f'Backwards weights are rescaled by {back_weight_rescale}') if back_weight_rescale != 1 else True
 
     logging.info(f'Learning rate: {learning_rate}')
     if model_type == 'dyn_pseudo':
@@ -213,7 +214,14 @@ def main(params):
     logging.info("Datasets are loaded")
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers, weight_init, backwards_weight_init, bias)
+    net_params =   {"weight_init" : weight_init,
+                    "backwards_weight_init" : backwards_weight_init,
+                    "bias" : bias,
+                    "weight_rescale" : weight_rescale,
+                    "back_weight_rescale" : back_weight_rescale}
+    backprop_net = exp_aux.load_network(model_type, 
+                                        layers,
+                                        net_params)
     backprop_net.to(device)
 
     # set up the optimizer and the loss function
@@ -336,8 +344,9 @@ def main(params):
                 if PRINT_DEBUG:
                     for i in range(len(backprop_net.synapses)):
                         logging.info(f"Norm of weights in layer {i}: {torch.linalg.norm(backprop_net.synapses[i].get_forward())}")
-                        logging.info(f"Weight update in layer {i}: {backprop_net.synapses[i].weight.grad}") 
+                        logging.info(f"Norm of weight update in layer {i}: {torch.linalg.norm(backprop_net.synapses[i].weight.grad)}") 
                         #logging.info(f"Weights in layer {i}: {backprop_net.synapses[i].get_forward()}")
+                        logging.info(f"Weight update in layer {i}: {backprop_net.synapses[i].weight.grad}") 
                         if model_type != 'backprop':
                             #logging.info(f"Backwards weights in layer {i}: {backprop_net.synapses[i].get_backward()}")
                             logging.info(f"Norm of backwards weights in layer {i}: {torch.linalg.norm(backprop_net.synapses[i].get_backward())}")

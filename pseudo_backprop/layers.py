@@ -30,6 +30,35 @@ logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 SCALING_FACTOR = 4
 
+def read_params(net_params):
+    """
+        function to read parameters from dictionary
+    """
+
+    if "bias" in net_params:
+        bias = net_params["bias"]
+    else:
+        bias = True
+    if "weight_init" in net_params:
+        weight_init = net_params["weight_init"]
+    else:
+        weight_init = "uniform_"
+    if "backwards_weight_init" in net_params:
+        backwards_weight_init = net_params["backwards_weight_init"]
+    else:
+        backwards_weight_init = "uniform_"
+
+    if "weight_rescale" in net_params:
+        weight_rescale = net_params["weight_rescale"]
+    else:
+        weight_rescale = None
+    if "back_weight_rescale" in net_params:
+        back_weight_rescale = net_params["back_weight_rescale"]
+    else:
+        back_weight_rescale = None
+
+    return bias, weight_init, backwards_weight_init, weight_rescale, back_weight_rescale
+
 # pylint: disable=W0223,W0212
 # class VanillaLinear(torch.nn.Linear):
 #     """Vanilla Linear
@@ -106,9 +135,9 @@ class VanillaBackpropLinearity(torch.autograd.Function):
 
 class VanillaBackpropModule(nn.Module):
 
-    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params):
         """
-            feedback alignement module with initilaization
+            backprop module with initilaization
 
             Params:
             input_size: input size of the module
@@ -119,15 +148,18 @@ class VanillaBackpropModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
-        self.input_size = input_size
-        self.output_size = output_size
-        self.weight_init = weight_init
+
+        bias, weight_init, _, weight_rescale, _ = read_params(net_params)
+
         if bias:
             logging.info('Bias is activated')
         else:
             logging.info('Bias is deactivated.')
 
         # create the parameters
+        self.input_size = input_size
+        self.output_size = output_size
+        self.weight_init = weight_init
         self.weight = nn.Parameter(torch.Tensor(self.output_size,
                                                 self.input_size),
                                    requires_grad=True)
@@ -237,7 +269,7 @@ class FeedbackAlignmentModule(nn.Module):
         Define a module of synapses for the feedback alignement synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params):
         """
             feedback alignement module with initilaization
 
@@ -250,6 +282,9 @@ class FeedbackAlignmentModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
+        
+        bias, weight_init, backwards_weight_init, weight_rescale, back_weight_rescale = read_params(net_params)
+
         self.input_size = input_size
         self.output_size = output_size
         self.weight_init = weight_init
@@ -399,7 +434,7 @@ class PseudoBackpropModule(nn.Module):
         Define a module of synapses for the pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params):
         """
             pseudobackprop module with initilaization
 
@@ -412,10 +447,12 @@ class PseudoBackpropModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
+
+        bias, weight_init, _, weight_rescale, _ = read_params(net_params)
+
         self.input_size = input_size
         self.output_size = output_size
         self.weight_init = weight_init
-        self.backwards_weight_init = backwards_weight_init
         self.counter = 0
         if bias:
             logging.info('Bias is activated')
@@ -593,7 +630,7 @@ class DynPseudoBackpropModule(nn.Module):
         Define a module of synapses for dynamical pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, normalize=False, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params, normalize = False):
         """
             dynamical pseudobackprop module with initilaization
 
@@ -606,6 +643,9 @@ class DynPseudoBackpropModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
+
+        bias, weight_init, backwards_weight_init, weight_rescale, back_weight_rescale = read_params(net_params)
+
         self.input_size = input_size
         self.output_size = output_size
         self.weight_init = weight_init
