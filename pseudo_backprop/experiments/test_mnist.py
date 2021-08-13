@@ -90,6 +90,7 @@ def main(params, dataset, per_images=10000):
     backprop_net = exp_aux.load_network(model_type, 
                                         layers,
                                         net_params)
+    backprop_net.to(device)
 
     # every <<per_images>> images there is a saved model, hence we have to
     # take into
