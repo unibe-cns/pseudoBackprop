@@ -180,7 +180,7 @@ class VanillaBackpropModule(nn.Module):
                                 nonlinearity='relu')
         elif self.weight_init == "zeros_":
             torch.nn.init.zeros_(self.weight)
-        if weight_rescale != 1:
+        if weight_rescale is not None:
             with torch.no_grad():
                 self.weight.mul_(weight_rescale)
         if bias:
@@ -333,10 +333,10 @@ class FeedbackAlignmentModule(nn.Module):
                                 nonlinearity='relu')
         elif self.backwards_weight_init == "zeros_":
             torch.nn.init.zeros_(self.weight_back)
-        if weight_rescale != 1:
+        if weight_rescale is not None:
             with torch.no_grad():
                 self.weight.mul_(weight_rescale)
-        if back_weight_rescale != 1:
+        if back_weight_rescale is not None:
             with torch.no_grad():
                 self.weight_back.mul_(back_weight_rescale)
         if bias:
@@ -495,7 +495,7 @@ class PseudoBackpropModule(nn.Module):
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
 
-        if weight_rescale != 1:
+        if weight_rescale is not None:
             with torch.no_grad():
                 self.weight.mul_(weight_rescale)
         if bias:
@@ -710,10 +710,10 @@ class DynPseudoBackpropModule(nn.Module):
         elif self.backwards_weight_init == "zeros_":
             torch.nn.init.zeros_(self.weight_back)
 
-        if weight_rescale != 1:
+        if weight_rescale is not None: 
             with torch.no_grad():
                 self.weight.mul_(weight_rescale)
-        if back_weight_rescale != 1:
+        if back_weight_rescale is not None:
             with torch.no_grad():
                 self.weight_back.mul_(back_weight_rescale)
 

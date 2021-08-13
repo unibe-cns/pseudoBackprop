@@ -47,8 +47,6 @@ def main(params):
         raise ValueError("The received initialization method <<{}>> is not implemented. \
                           Choose from [uniform_, kaiming_normal_, zeros_]".format(
             weight_init))
-    weight_rescale = params["weight_rescale"] if "weight_rescale" in params else 1
-    back_weight_rescale = params["backwards_weight_rescale"] if "backwards_weight_rescale" in params else 1
 
     if "backwards_weight_init" in params:
         backwards_weight_init = params["backwards_weight_init"]
@@ -58,6 +56,9 @@ def main(params):
         raise ValueError("The received initialization method <<{}>> is not implemented. \
                           Choose from [uniform_, kaiming_normal_, zeros_]".format(
             backwards_weight_init))
+
+    weight_rescale = params["weight_rescale"] if "weight_rescale" in params else 1
+    back_weight_rescale = params["backwards_weight_rescale"] if "backwards_weight_rescale" in params else 1
 
     if model_type == 'dyn_pseudo':
 

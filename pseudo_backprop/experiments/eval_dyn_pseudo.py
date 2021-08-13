@@ -42,6 +42,10 @@ def main(params, val_epoch = None, per_images=10000):
     if model_type != 'dyn_pseudo':
         raise ValueError("""Invalid model type. This action can only\
             be run for dynamical pseudobackprop""")
+    if "bias" in params:
+            bias = params["bias"]
+    else:
+        bias = True
 
 
     if dataset_type == "yinyang":
@@ -91,8 +95,10 @@ def main(params, val_epoch = None, per_images=10000):
     logging.info("Datasets are loaded")
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers)
-    backprop_net.to(device)
+    net_params =   {"bias" : bias}
+    backprop_net = exp_aux.load_network(model_type, 
+                                        layers,
+                                        net_params)
 
     # make a dataloader for the training set
     genpseudo_samp = torch.utils.data.DataLoader(
