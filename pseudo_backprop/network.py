@@ -19,7 +19,7 @@ class FullyConnectedNetwork(torch.nn.Module):
         Feedforward network with relu non-linearities between the modules
     """
 
-    def __init__(self, layers, synapse_module, mode=None, weight_init="uniform_", backwards_weight_init="uniform_"):
+    def __init__(self, layers, synapse_module, net_params, mode=None):
         """
             Initialize the network
 
@@ -70,8 +70,7 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         self.synapses = [synapse_module(self.layers[index],
                                         self.layers[index + 1],
-                                        weight_init=weight_init,
-                                        backwards_weight_init=backwards_weight_init) for index in
+                                        net_params = net_params) for index in
                          range(self.num_layers - 1)]
 
         # look for gpu device, use gpu if available
@@ -87,46 +86,46 @@ class FullyConnectedNetwork(torch.nn.Module):
         self.operations = torch.nn.Sequential(*self.operations_list)
 
     @classmethod
-    def backprop(cls, layers, weight_init, backwards_weight_init):
+    def backprop(cls, layers, net_params):
         """
             Delegating constructor for the backprop case
         """
         logging.info("Network with vanilla backpropagation is constructed.")
-        return cls(layers, VanillaBackpropModule, weight_init=weight_init, backwards_weight_init=backwards_weight_init)
+        return cls(layers, VanillaBackpropModule, net_params)
 
     @classmethod
-    def feedback_alignement(cls, layers, weight_init, backwards_weight_init):
+    def feedback_alignment(cls, layers, net_params):
         """
             Delegating constructor for the feedback alignment case
         """
         logging.info("Network with feedback alignment is constructed.")
-        return cls(layers, FeedbackAlignmentModule, weight_init=weight_init, backwards_weight_init=backwards_weight_init)
+        return cls(layers, FeedbackAlignmentModule, net_params)
 
     @classmethod
-    def pseudo_backprop(cls, layers, weight_init, backwards_weight_init):
+    def pseudo_backprop(cls, layers, net_params):
         """
             Delegating constructor for the pseudo-backprop case
         """
         logging.info("Network with pseudo-backprop is constructed.")
-        return cls(layers, PseudoBackpropModule, mode='pseudo', weight_init=weight_init, backwards_weight_init=backwards_weight_init)
+        return cls(layers, PseudoBackpropModule, net_params, mode='pseudo')
 
     @classmethod
-    def gen_pseudo_backprop(cls, layers, weight_init, backwards_weight_init):
+    def gen_pseudo_backprop(cls, layers, net_params):
         """
             Delegating constructor for the generalized pseudo-backprop case
         """
         logging.info(
             "Network with generalized pseudo-backprop is constructed.")
-        return cls(layers, PseudoBackpropModule, mode='gen_pseudo', weight_init=weight_init, backwards_weight_init=backwards_weight_init)
+        return cls(layers, PseudoBackpropModule, net_params, mode='gen_pseudo')
 
     @classmethod
-    def dyn_pseudo_backprop(cls, layers, weight_init, backwards_weight_init):
+    def dyn_pseudo_backprop(cls, layers, net_params):
         """
             Delegating constructor for the dynamical pseudo-backprop case
         """
         logging.info(
             "Network with dynamical pseudo-backprop is constructed.")
-        return cls(layers, DynPseudoBackpropModule, weight_init=weight_init, backwards_weight_init=backwards_weight_init)
+        return cls(layers, DynPseudoBackpropModule, net_params)
 
     # def conv_layer():
     #     """

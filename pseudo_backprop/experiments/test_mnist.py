@@ -37,6 +37,10 @@ def main(params, dataset, per_images=10000):
         dataset_type = "mnist"
     else:
         dataset_type = params["dataset"]
+    if "bias" in params:
+            bias = params["bias"]
+    else:
+        bias = True
 
     if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
@@ -82,7 +86,10 @@ def main(params, dataset, per_images=10000):
     nb_classes = len(testset.classes)
 
     # make the networks
-    backprop_net = exp_aux.load_network(model_type, layers)
+    net_params =   {"bias" : bias}
+    backprop_net = exp_aux.load_network(model_type, 
+                                        layers,
+                                        net_params)
     backprop_net.to(device)
 
     # every <<per_images>> images there is a saved model, hence we have to

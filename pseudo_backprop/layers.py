@@ -30,6 +30,35 @@ logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 SCALING_FACTOR = 4
 
+def read_params(net_params):
+    """
+        function to read parameters from dictionary
+    """
+
+    if "bias" in net_params:
+        bias = net_params["bias"]
+    else:
+        bias = True
+    if "weight_init" in net_params:
+        weight_init = net_params["weight_init"]
+    else:
+        weight_init = "uniform_"
+    if "backwards_weight_init" in net_params:
+        backwards_weight_init = net_params["backwards_weight_init"]
+    else:
+        backwards_weight_init = "uniform_"
+
+    if "weight_rescale" in net_params:
+        weight_rescale = net_params["weight_rescale"]
+    else:
+        weight_rescale = None
+    if "back_weight_rescale" in net_params:
+        back_weight_rescale = net_params["back_weight_rescale"]
+    else:
+        back_weight_rescale = None
+
+    return bias, weight_init, backwards_weight_init, weight_rescale, back_weight_rescale
+
 # pylint: disable=W0223,W0212
 # class VanillaLinear(torch.nn.Linear):
 #     """Vanilla Linear
@@ -106,9 +135,9 @@ class VanillaBackpropLinearity(torch.autograd.Function):
 
 class VanillaBackpropModule(nn.Module):
 
-    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params):
         """
-            feedback alignement module with initilaization
+            backprop module with initilaization
 
             Params:
             input_size: input size of the module
@@ -119,15 +148,18 @@ class VanillaBackpropModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
-        self.input_size = input_size
-        self.output_size = output_size
-        self.weight_init = weight_init
+
+        bias, weight_init, _, weight_rescale, _ = read_params(net_params)
+
         if bias:
             logging.info('Bias is activated')
         else:
             logging.info('Bias is deactivated.')
 
         # create the parameters
+        self.input_size = input_size
+        self.output_size = output_size
+        self.weight_init = weight_init
         self.weight = nn.Parameter(torch.Tensor(self.output_size,
                                                 self.input_size),
                                    requires_grad=True)
@@ -146,6 +178,11 @@ class VanillaBackpropModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
+        if weight_rescale is not None:
+            with torch.no_grad():
+                self.weight.mul_(weight_rescale)
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -235,7 +272,7 @@ class FeedbackAlignmentModule(nn.Module):
         Define a module of synapses for the feedback alignement synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params):
         """
             feedback alignement module with initilaization
 
@@ -248,6 +285,9 @@ class FeedbackAlignmentModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
+        
+        bias, weight_init, backwards_weight_init, weight_rescale, back_weight_rescale = read_params(net_params)
+
         self.input_size = input_size
         self.output_size = output_size
         self.weight_init = weight_init
@@ -282,6 +322,8 @@ class FeedbackAlignmentModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
 
         if self.backwards_weight_init == "uniform_":
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
@@ -289,6 +331,14 @@ class FeedbackAlignmentModule(nn.Module):
         elif self.backwards_weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.backwards_weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight_back)
+        if weight_rescale is not None:
+            with torch.no_grad():
+                self.weight.mul_(weight_rescale)
+        if back_weight_rescale is not None:
+            with torch.no_grad():
+                self.weight_back.mul_(back_weight_rescale)
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -393,7 +443,7 @@ class PseudoBackpropModule(nn.Module):
         Define a module of synapses for the pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params):
         """
             pseudobackprop module with initilaization
 
@@ -406,10 +456,12 @@ class PseudoBackpropModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
+
+        bias, weight_init, _, weight_rescale, _ = read_params(net_params)
+
         self.input_size = input_size
         self.output_size = output_size
         self.weight_init = weight_init
-        self.backwards_weight_init = backwards_weight_init
         self.counter = 0
         if bias:
             logging.info('Bias is activated')
@@ -436,11 +488,16 @@ class PseudoBackpropModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
 
         # KM: this is not the correct backweight matrix for gen_pseudo!
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight),
                                  requires_grad=False)
 
+        if weight_rescale is not None:
+            with torch.no_grad():
+                self.weight.mul_(weight_rescale)
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
                                    b=k_init)
@@ -585,7 +642,7 @@ class DynPseudoBackpropModule(nn.Module):
         Define a module of synapses for dynamical pseudo backprop synapses
     """
 
-    def __init__(self, input_size, output_size, normalize=False, bias=True, weight_init = "uniform_",  backwards_weight_init = "uniform_"):
+    def __init__(self, input_size, output_size, net_params, normalize = False):
         """
             dynamical pseudobackprop module with initilaization
 
@@ -598,6 +655,9 @@ class DynPseudoBackpropModule(nn.Module):
 
         # call parent for proper init
         super().__init__()
+
+        bias, weight_init, backwards_weight_init, weight_rescale, back_weight_rescale = read_params(net_params)
+
         self.input_size = input_size
         self.output_size = output_size
         self.weight_init = weight_init
@@ -638,6 +698,8 @@ class DynPseudoBackpropModule(nn.Module):
         elif self.weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight)
 
         if self.backwards_weight_init == "uniform_":
             torch.nn.init.uniform_(self.weight_back, a=-1*k_init,
@@ -645,6 +707,15 @@ class DynPseudoBackpropModule(nn.Module):
         elif self.backwards_weight_init == "kaiming_normal_":
             torch.nn.init.kaiming_normal_(self.weight_back, a=0, mode = 'fan_in',
                                 nonlinearity='relu')
+        elif self.backwards_weight_init == "zeros_":
+            torch.nn.init.zeros_(self.weight_back)
+
+        if weight_rescale is not None: 
+            with torch.no_grad():
+                self.weight.mul_(weight_rescale)
+        if back_weight_rescale is not None:
+            with torch.no_grad():
+                self.weight_back.mul_(back_weight_rescale)
 
         if bias:
             torch.nn.init.uniform_(self.bias, a=-1*k_init,
