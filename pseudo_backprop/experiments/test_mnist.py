@@ -18,7 +18,7 @@ logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915
-def main(params, dataset, per_images=10000):
+def main(params, dataset, per_images):
     """
     Run the testing on the mnist dataset.
     
@@ -59,13 +59,18 @@ def main(params, dataset, per_images=10000):
     # Load the model and the data
     transform = transforms.Compose([transforms.ToTensor()])
     if dataset_type == "cifar10":
+        if per_images == None: per_images = 10000
         testset = torchvision.datasets.CIFAR10(params["dataset_path"],
                                                train=(dataset == 'train'),
                                                download=True,
                                                transform=transform)
     # yinyang is not officially implemented by torchvision, so we load it by hand:
     elif dataset_type == "yinyang":
-        testset = YinYangDataset(size = dataset_size, seed = random_seed)
+        if per_images == None: per_images = 1000
+        if dataset == 'test':
+            testset = YinYangDataset(size = 1000, seed = random_seed + 1)
+        else:
+            testset = YinYangDataset(size = dataset_size, seed = random_seed)
         testset.classes = testset.class_names
         # implemntation of parity dataset:
     elif dataset_type == "parity":
@@ -74,6 +79,7 @@ def main(params, dataset, per_images=10000):
         testset.classes = testset.class_names
 
     elif dataset_type == "mnist":
+        if per_images == None: per_images = 10000
         testset = torchvision.datasets.MNIST(params["dataset_path"],
                                              train=(dataset == 'train'),
                                              download=True,
@@ -100,7 +106,6 @@ def main(params, dataset, per_images=10000):
     elif dataset_type == "cifar10":
         nb_batches = int(50000 / per_images)
     elif dataset_type == "yinyang":
-        per_images = 1000
         nb_batches = int(dataset_size / per_images)
     elif dataset_type == "parity":
         per_images = dataset_size // 2
