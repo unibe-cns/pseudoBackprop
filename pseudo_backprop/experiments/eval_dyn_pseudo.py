@@ -124,7 +124,9 @@ def main(params, val_epoch = None, per_images = None):
     elif dataset_type == "cifar10":
         nb_batches = int(50000 / per_images)
     elif dataset_type == "yinyang":
-        per_images = 1000
+        nb_batches = int(dataset_size / per_images)
+    elif dataset_type == "parity":
+        per_images = dataset_size // 2
         nb_batches = int(dataset_size / per_images)
 
     # load the saved network states and calculate cosine similarity
@@ -184,6 +186,9 @@ def main(params, val_epoch = None, per_images = None):
         logging.info(f'The final classification ratio is: {class_ratio}')
         # logging.info(f'The final loss function: {loss}')
         # logging.info(f'The final confusion matrix is:\n {confusion_matrix}')
+
+        # for yinyang, need to convert to float32 because data is in float64
+        if dataset_type in ["yinyang", "parity"]: sub_data = sub_data.float()
 
         # extract the backwards matrix at this stage
         fw_weights_array.append(backprop_net.get_forward_weights().copy())
@@ -311,4 +316,4 @@ if __name__ == '__main__':
     else:
         EPOCH = None
 
-    main(PARAMETERS, EPOCH)
+    main(PARAMETERS, EPOCH, per_images=ARGS.per_images)
