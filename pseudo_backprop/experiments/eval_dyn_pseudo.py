@@ -197,7 +197,11 @@ def main(params, val_epoch = None, per_images = None):
         # generate a list of the data-specific pinverse matrices
         logging.info("Calculating data-specific pseudoinverse matrices")
 
-        dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
+        try:
+            dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
+        except(np.linalg.LinAlgError):
+            logging.info("SVD did not converge. Skipping")
+            continue
 
         # error vectors per layer are saved in order from output to first layer
         error_vecs_B = [error_vec_out]
