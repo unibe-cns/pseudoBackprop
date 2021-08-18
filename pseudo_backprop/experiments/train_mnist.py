@@ -19,7 +19,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
 PRINT_DEBUG = False
 
 # pylint: disable=R0914,R0915,R0912,R1702
-def main(params):
+def main(params, per_images):
 
     # time of initiation, used for timing
     t0 = time.time()
@@ -110,6 +110,16 @@ def main(params):
     if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
     random_seed = params["random_seed"]
+
+    if per_images is None:
+        if "per_images" in params:
+            per_images = params["per_images"]
+        else:
+            # define how often we shall print and output
+            if dataset_type == "yinyang": per_images = dataset_size // 10
+            elif dataset_type == "parity": per_images = dataset_size // 2
+            else: per_images = 10000
+
 
     logging.info(f'Parameters loaded.')
     logging.info(f'Dataset: {dataset_type}')
@@ -250,11 +260,6 @@ def main(params):
     path_to_save = os.path.join(model_folder, file_to_save)
     torch.save(backprop_net.state_dict(),
                path_to_save)
-
-    # define how often we shall print and output
-    if dataset_type == "yinyang": per_images = dataset_size // 10
-    elif dataset_type == "parity": per_images = dataset_size // 2
-    else: per_images = 10000
 
     # for dyn_pseudo, set normalizing of weights
     if model_type == "dyn_pseudo":
@@ -411,4 +416,4 @@ if __name__ == '__main__':
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 
-    main(PARAMETERS)
+    main(PARAMETERS, per_images=ARGS.per_images)

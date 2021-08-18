@@ -44,7 +44,7 @@ def parse_experiment_arguments():
     parser.add_argument('--dataset', type=str,
                         help='Choose from <test> or <train>.',
                         default='test')
-    parser.add_argument('--per_images', type=int, default=10000,
+    parser.add_argument('--per_images', type=int, default=None,
                         help='Per so many images we evaluate the model')
     parser.add_argument('--epoch', type=int,
                         help='Which epoch to validate')

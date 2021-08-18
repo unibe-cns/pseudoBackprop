@@ -18,7 +18,7 @@ logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915
-def main(params, dataset, per_images=10000):
+def main(params, dataset, per_images):
     """
     Run the testing on the mnist dataset.
     
@@ -91,6 +91,15 @@ def main(params, dataset, per_images=10000):
                                         layers,
                                         net_params)
     backprop_net.to(device)
+
+    if per_images is None:
+        if "per_images" in params:
+            per_images = params["per_images"]
+        else:
+            # define how often we shall print and output
+            if dataset_type == "yinyang": per_images = dataset_size // 10
+            elif dataset_type == "parity": per_images = dataset_size // 2
+            else: per_images = 10000
 
     # every <<per_images>> images there is a saved model, hence we have to
     # take into

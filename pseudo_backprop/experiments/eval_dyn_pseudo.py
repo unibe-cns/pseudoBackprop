@@ -21,7 +21,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915,R0912,R1702
-def main(params, val_epoch = None, per_images=10000):
+def main(params, val_epoch = None, per_images):
 
     """
         Load the training data and generate the data-specific pinverses
@@ -99,6 +99,14 @@ def main(params, val_epoch = None, per_images=10000):
     backprop_net = exp_aux.load_network(model_type, 
                                         layers,
                                         net_params)
+    if per_images is None:
+        if "per_images" in params:
+            per_images = params["per_images"]
+        else:
+            # define how often we shall print and output
+            if dataset_type == "yinyang": per_images = dataset_size // 10
+            elif dataset_type == "parity": per_images = dataset_size // 2
+            else: per_images = 10000
 
     # make a dataloader for the training set
     genpseudo_samp = torch.utils.data.DataLoader(
