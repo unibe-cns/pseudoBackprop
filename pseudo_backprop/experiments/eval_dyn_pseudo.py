@@ -21,7 +21,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915,R0912,R1702
-def main(params, val_epoch = None, per_images):
+def main(params, val_epoch = None, per_images = None):
 
     """
         Load the training data and generate the data-specific pinverses
