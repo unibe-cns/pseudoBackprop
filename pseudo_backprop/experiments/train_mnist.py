@@ -131,6 +131,7 @@ def main(params, per_images):
 
     logging.info(f'Parameters loaded.')
     logging.info(f'Loss criterion: {loss_criterion}')
+    logging.info(f'Optimizer: {optimizer_type}')
     logging.info(f'Dataset: {dataset_type}')
     logging.info(f'Random seed: {random_seed}')
     logging.info(f'Bias activated' if bias else 'Bias deactivated')
