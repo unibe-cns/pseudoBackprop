@@ -106,6 +106,14 @@ def main(params, per_images):
         optimizer_type = "SGD"
     else:
         optimizer_type = params["optimizer"]
+    if "criterion" not in params:
+        loss_criterion = "MSELoss"
+    else:
+        loss_criterion = params["criterion"]
+    if loss_criterion not in ["MSELoss", "CrossEntropyLoss"]:
+        raise ValueError("The received loss criterion <<{}>> is not implemented. \
+                          Choose from [MSELoss, CrossEntropyLoss]".format(
+            loss_criterion))
 
     if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
@@ -122,6 +130,7 @@ def main(params, per_images):
 
 
     logging.info(f'Parameters loaded.')
+    logging.info(f'Loss criterion: {loss_criterion}')
     logging.info(f'Dataset: {dataset_type}')
     logging.info(f'Random seed: {random_seed}')
     logging.info(f'Bias activated' if bias else 'Bias deactivated')
@@ -236,8 +245,11 @@ def main(params, per_images):
     backprop_net.to(device)
 
     # set up the optimizer and the loss function
-    y_onehot = torch.empty(batch_size, nb_classes, device=device)
-    loss_function = torch.nn.MSELoss(reduction='sum')
+    if loss_criterion == "MSELoss":
+        y_onehot = torch.empty(batch_size, nb_classes, device=device)
+        loss_function = torch.nn.MSELoss(reduction='sum')
+    elif loss_criterion == "CrossEntropyLoss":
+        loss_function = torch.nn.CrossEntropyLoss()
     if optimizer_type == 'SGD':
         optimizer = torch.optim.SGD(
             backprop_net.parameters(), lr=learning_rate, momentum=momentum,
@@ -310,12 +322,15 @@ def main(params, per_images):
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            y_onehot.zero_()
-            unsq_label = labels.unsqueeze(1)
-            unsq_label.to(device)
-            y_onehot.scatter_(1, unsq_label, 1)
             outputs = backprop_net(inputs)
-            loss_value = loss_function(outputs, y_onehot)
+            if loss_criterion == "MSELoss":
+                y_onehot.zero_()
+                unsq_label = labels.unsqueeze(1)
+                unsq_label.to(device)
+                y_onehot.scatter_(1, unsq_label, 1)
+                loss_value = loss_function(outputs, y_onehot)
+            elif loss_criterion == "CrossEntropyLoss":
+                loss_value = loss_function(outputs, labels)
             loss_value.backward()
 
             # for dyn pseudo backprop, we have a separate backwards learning rate
