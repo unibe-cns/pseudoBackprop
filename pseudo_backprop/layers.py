@@ -27,7 +27,7 @@ import numpy as np
 from torch import nn
 
 logging.basicConfig(format='Layer modules -- %(levelname)s: %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 SCALING_FACTOR = 4
 
 def read_params(net_params):
