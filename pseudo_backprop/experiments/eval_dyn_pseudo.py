@@ -265,15 +265,15 @@ def main(params, val_epoch = None, per_images = None):
             # calculate the cosine similarity using the Frobenius norm
             # between the error backpropagated using the tranpose of the weights
             # and the dynamical backwards matrix
-            error_vecs_trans[layer] = np.round(
+            cos_vecs_trans[layer] = np.round(
                 cos_sim_vec(error_vecs_B[-1-layer], error_vecs_trans[-1-layer]).tolist()
                 ,6)
                 
-            if error_vecs_trans[layer] > 1 or error_vecs_trans[layer] < -1:
-                raise ValueError(f"Cosine between tensors has returned invalid value {error_vecs_trans[layer]}")
+            if cos_vecs_trans[layer] > 1 or cos_vecs_trans[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos_vecs_trans[layer]}")
             logging.info(f'The cosine between the errors propagated using the '
                          f'backwards weights and the transpose of the forward weights '
-                         f'in layer {layer} is: {error_vecs_trans[layer]}')
+                         f'in layer {layer} is: {cos_vecs_trans[layer]}')
 
             # calculate the cosine similarity using the Frobenius norm
             # between the tranpose of the weights
