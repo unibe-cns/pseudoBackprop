@@ -45,6 +45,10 @@ def main(params, dataset, per_images):
     if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
     random_seed = params["random_seed"]
+    if "criterion" not in params:
+        loss_criterion = "MSELoss"
+    else:
+        loss_criterion = params["criterion"]
 
     # set random seed
     torch.manual_seed(random_seed)
@@ -156,7 +160,7 @@ def main(params, dataset, per_images):
         # Evaluate the model
         loss, confusion_matrix = evaluate_model(backprop_net, testloader,
                                                 batch_size, device,
-                                                nb_classes)
+                                                nb_classes, loss_criterion)
         class_ratio = (confusion_matrix.diagonal().sum() /
                        confusion_matrix.sum())
         loss_array.append(loss)

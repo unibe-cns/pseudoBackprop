@@ -4,7 +4,7 @@ import torch
 
 
 def evaluate_model(network_model, testloader, batch_size, device='cpu',
-                   nb_classes=10):
+                   nb_classes=10, loss_criterion="MSELoss"):
     """
     Evaluate the model on the given dataset and obtain the loss function and
     the results
@@ -23,9 +23,12 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
     # pylint: disable=R0914
 
     confusion_matrix = np.zeros((nb_classes, nb_classes))
-    loss_function = torch.nn.MSELoss(reduction='sum')
-    y_onehot = torch.empty(batch_size, nb_classes, device=device)
-    y_onehot.to(device)
+    if loss_criterion == "MSELoss":
+        y_onehot = torch.empty(batch_size, nb_classes, device=device)
+        y_onehot.to(device)
+        loss_function = torch.nn.MSELoss(reduction='sum')
+    elif loss_criterion == "CrossEntropyLoss":
+        loss_function = torch.nn.CrossEntropyLoss()
     loss = 0
     # turn off gathering the gradient for testing
     with torch.no_grad():
@@ -34,12 +37,15 @@ def evaluate_model(network_model, testloader, batch_size, device='cpu',
             images = images.float()     # for yinyang, we need to convert to float32
             images = images.view(batch_size, -1)
             outputs = network_model(images)
-            y_onehot.zero_()
-            unsq_label = labels.unsqueeze(1)
-            y_onehot.to(device)
-            unsq_label.to(device)
-            y_onehot.scatter_(1, unsq_label, 1)
-            loss_value = loss_function(outputs, y_onehot)
+            if loss_criterion == "MSELoss":
+                y_onehot.zero_()
+                unsq_label = labels.unsqueeze(1)
+                y_onehot.to(device)
+                unsq_label.to(device)
+                y_onehot.scatter_(1, unsq_label, 1)
+                loss_value = loss_function(outputs, y_onehot)
+            elif loss_criterion == "CrossEntropyLoss":
+                loss_value = loss_function(outputs, labels)
             loss += loss_value
             _, predicted = torch.max(outputs, 1)
             for tested in \
