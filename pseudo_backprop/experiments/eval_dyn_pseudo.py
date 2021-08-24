@@ -286,7 +286,7 @@ def main(params, val_epoch = None, per_images = None):
                 ,6)
             if cos_trans[layer] > 1 or cos_trans[layer] < -1:
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos_trans[layer]}")
-            logging.info(f'The cosine between the backwards weights and the pseudoinverse '
+            logging.info(f'The cosine between the backwards weights and the transpose of the forward weights '
                                  f'in layer {layer} is: {cos_trans[layer]}')
 
             # calculate the cosine similarity using the Frobenius norm
