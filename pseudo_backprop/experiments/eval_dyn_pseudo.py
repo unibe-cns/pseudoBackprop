@@ -379,7 +379,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         cos_pinv_array.append(cos_pinv.copy())
         cos_dspinv_array.append(cos_dspinv.copy())
 
-        cos_vecs_trans_array.append(cos_vecs_dsp.copy())
+        cos_vecs_trans_array.append(cos_vecs_trans.copy())
         cos_vecs_dsp_array.append(cos_vecs_dsp.copy())
         cos_vecs_pinv_array.append(cos_vecs_pinv.copy())
 
@@ -387,8 +387,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         back_norm_weights_array.append(back_norm_weights.copy())
 
     # plot results
-    fig_vecs, axes_vecs = plt.subplots(len(layers), 1,figsize=(12,12))
-    fig_mats, axes_mats = plt.subplots(len(layers), 1,figsize=(12,12))
+    fig_vecs, axes_vecs = plt.subplots(len(layers), 1,figsize=(8,3*(len(layers)+1)))
+    fig_mats, axes_mats = plt.subplots(len(layers), 1,figsize=(8,3*(len(layers)+1)))
 
     visu.evaluation(axes_vecs,
                       epoch_array=epoch_array,
@@ -399,7 +399,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                       limits=[-1,1],
                       labels=  ["cos of errors B vs. W^T",
                                 "cos of errors B vs. pinv(W)",
-                                "cos of errors B vs. ds-pinv(W)"]
+                                "cos of errors B vs. ds-pinv(W)"],
+                      linestyles=['-.', '--', '-']
                     )
 
     visu.evaluation(axes_mats,
@@ -411,7 +412,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                       limits=[-1,1],
                       labels=  ["cos of B vs. W^T",
                                 "cos of B vs. pinv(W)",
-                                "cos of B vs. ds-pinv(W)"]
+                                "cos of B vs. ds-pinv(W)"],
+                      linestyles=['-.', '--', '-']
                     )
 
     # # Add labels
