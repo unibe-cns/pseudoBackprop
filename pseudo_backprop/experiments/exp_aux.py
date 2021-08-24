@@ -46,6 +46,8 @@ def parse_experiment_arguments():
                         default='test')
     parser.add_argument('--per_images', type=int, default=None,
                         help='Per so many images we evaluate the model')
+    parser.add_argument('--num_workers', type=int, default=0,
+                        help='Value of num_workers in pytorch dataloader')
     parser.add_argument('--epoch', type=int,
                         help='Which epoch to validate')
     args = parser.parse_args()

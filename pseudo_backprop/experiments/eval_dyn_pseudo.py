@@ -24,7 +24,7 @@ logging.basicConfig(format='Evaluate model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915,R0912,R1702
-def main(params, val_epoch = None, per_images = None):
+def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
     """
         Load the training data and generate the data-specific pinverses
@@ -96,7 +96,7 @@ def main(params, val_epoch = None, per_images = None):
     nb_classes = len(trainset.classes)
     logging.info('The number of classes is %i', nb_classes)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                              shuffle=True, num_workers=0)
+                                              shuffle=True, num_workers=num_workers)
     nb_classes = len(trainset.classes)
 
     logging.info("Datasets are loaded")
@@ -475,4 +475,4 @@ if __name__ == '__main__':
     else:
         EPOCH = None
 
-    main(PARAMETERS, EPOCH, per_images=ARGS.per_images)
+    main(PARAMETERS, EPOCH, per_images=ARGS.per_images, num_workers=ARGS.num_workers)

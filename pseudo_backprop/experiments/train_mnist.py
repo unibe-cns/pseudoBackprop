@@ -19,7 +19,7 @@ logging.basicConfig(format='Train model -- %(levelname)s: %(message)s',
 PRINT_DEBUG = False
 
 # pylint: disable=R0914,R0915,R0912,R1702
-def main(params, per_images):
+def main(params, per_images, num_workers):
 
     # time of initiation, used for timing
     t0 = time.time()
@@ -199,7 +199,7 @@ def main(params, per_images):
                           Choose from ['mnist', 'cifar10', 'imagenet', 'yinyang', 'parity']".format(
             dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                              shuffle=True, num_workers=0)
+                                              shuffle=True, num_workers=num_workers)
     nb_classes = len(trainset.classes)
     logging.info('The number of classes is %i', nb_classes)
 
@@ -432,4 +432,4 @@ if __name__ == '__main__':
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 
-    main(PARAMETERS, per_images=ARGS.per_images)
+    main(PARAMETERS, per_images=ARGS.per_images, num_workers=ARGS.num_workers)

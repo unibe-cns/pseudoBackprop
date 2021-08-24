@@ -18,7 +18,7 @@ logging.basicConfig(format='Test model -- %(levelname)s: %(message)s',
 
 
 # pylint: disable=R0914,R0915
-def main(params, dataset, per_images):
+def main(params, dataset, per_images, num_workers):
     """
     Run the testing on the mnist dataset.
     
@@ -92,7 +92,7 @@ def main(params, dataset, per_images):
         raise ValueError("The received dataset <<{}>> is not implemented. \
                           Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                             shuffle=True, num_workers=0)
+                                             shuffle=True, num_workers=num_workers)
     nb_classes = len(testset.classes)
 
     # make the networks
@@ -223,4 +223,4 @@ if __name__ == '__main__':
     with open(ARGS.params, 'r+') as f:
         PARAMETERS = json.load(f)
 
-    main(PARAMETERS, ARGS.dataset, per_images=ARGS.per_images)
+    main(PARAMETERS, ARGS.dataset, per_images=ARGS.per_images, num_workers=ARGS.num_workers)
