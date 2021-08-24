@@ -54,6 +54,10 @@ def main(params, val_epoch = None, per_images = None):
     if dataset_type == "yinyang":
         dataset_size = params["dataset_size"]
         random_seed = params["random_seed"]
+    if "criterion" not in params:
+        loss_criterion = "MSELoss"
+    else:
+        loss_criterion = params["criterion"]
 
     # set random seed
     torch.manual_seed(params["random_seed"])
@@ -92,7 +96,7 @@ def main(params, val_epoch = None, per_images = None):
     nb_classes = len(trainset.classes)
     logging.info('The number of classes is %i', nb_classes)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                              shuffle=True, num_workers=2)
+                                              shuffle=True, num_workers=0)
     nb_classes = len(trainset.classes)
 
     logging.info("Datasets are loaded")

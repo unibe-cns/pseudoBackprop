@@ -92,7 +92,7 @@ def main(params, dataset, per_images):
         raise ValueError("The received dataset <<{}>> is not implemented. \
                           Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                             shuffle=True, num_workers=2)
+                                             shuffle=True, num_workers=0)
     nb_classes = len(testset.classes)
 
     # make the networks

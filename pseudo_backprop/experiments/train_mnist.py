@@ -199,7 +199,7 @@ def main(params, per_images):
                           Choose from ['mnist', 'cifar10', 'imagenet', 'yinyang', 'parity']".format(
             dataset_type))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                              shuffle=True, num_workers=2)
+                                              shuffle=True, num_workers=0)
     nb_classes = len(trainset.classes)
     logging.info('The number of classes is %i', nb_classes)
 
