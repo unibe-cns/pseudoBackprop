@@ -233,6 +233,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                         error_vecs_B[-1]))
 
         # calculate same for transpose of W to compare
+        # this fictional error in layer i is given by backpropagating all errors with W^T
+        # i.e. the mismatch will increase from last to first layer
         error_vecs_trans = [error_vec_out]
         for layer in range(len(layers) -2, -1, -1):
         
