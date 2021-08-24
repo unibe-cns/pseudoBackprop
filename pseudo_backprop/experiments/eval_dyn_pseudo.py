@@ -178,6 +178,7 @@ def main(params, val_epoch = None, per_images = None):
                         f"{ims}.pth")
         logging.info(f'• Processing model at state of epoch {epoch} and image {ims}.')
         path_to_model = os.path.join(model_folder, file_to_load)
+        print('load_state_dict')
         try:
             backprop_net.load_state_dict(torch.load(path_to_model, map_location=torch.device('cpu')))
         except FileNotFoundError:
@@ -195,7 +196,6 @@ def main(params, val_epoch = None, per_images = None):
         class_ratio = (confusion_matrix.diagonal().sum() /
                        confusion_matrix.sum())
         loss_array.append(loss)
-        conf_matrix_array[index] = confusion_matrix.tolist()
         error_ratio_array.append(1 - class_ratio)
 
         logging.info(f'The final classification ratio is: {class_ratio}')
