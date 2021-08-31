@@ -371,10 +371,10 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
             #                      f'in layer {layer} is: {dist[layer]}')
 
             # calculate norm of weights for later analysis
-            # fw_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(fw_weights_array[-1][layer]))
-            # logging.info(f'The norm of the forward weights in layer {layer} is: {fw_norm_weights[layer]}')
-            # back_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer]))
-            # logging.info(f'The norm of the backward weights in layer {layer} is: {back_norm_weights[layer]}')
+            fw_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(fw_weights_array[-1][layer]))
+            logging.info(f'The norm of the forward weights in layer {layer} is: {fw_norm_weights[layer]}')
+            back_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer]))
+            logging.info(f'The norm of the backward weights in layer {layer} is: {back_norm_weights[layer]}')
         
         # dist_array.append(dist.copy())
         cos_trans_array.append(cos_trans.copy())
