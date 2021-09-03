@@ -12,6 +12,7 @@ from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
 from pseudo_backprop.aux import evaluate_model
 from pseudo_backprop.aux import loss_error
+from pseudo_backprop.aux import calc_mismatch_energy_fast
 import exp_pseudo_backprop.visualization as visu
 import matplotlib as mpl
 mpl.use('Agg')
@@ -58,6 +59,15 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         loss_criterion = "MSELoss"
     else:
         loss_criterion = params["criterion"]
+    # regularizer can be given as an array or single value
+    if not isinstance(params["size_of_regularizer"], list):
+        regularizer_array = [params["size_of_regularizer"]] * (len(layers) - 1)
+    elif len(params["size_of_regularizer"]) == len(layers) - 1:
+        regularizer_array = params["size_of_regularizer"]
+    else:
+        raise ValueError(f"Number of given values for the regularizer\
+            does not match number of backward matrices ({len(layers) - 1})\
+            (if all entries are equal, the value can also be given as a scalar).")
 
     # set random seed
     torch.manual_seed(params["random_seed"])
@@ -159,8 +169,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
     cos_vecs_pinv = [0]*(len(layers)-1)
     cos_vecs_dsp_array = []
     cos_vecs_dsp = [0]*(len(layers)-1)
-    dist_array = []
-    dist = [0]*(len(layers)-1)
+    mm_energy_array = []
+    mm_energy = [0]*(len(layers)-1)
 
     epoch_array = []
     image_array = []
@@ -217,6 +227,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
         try:
             dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
+            Gamma2_array = backprop_net.get_gamma2_matrix(dataset=sub_data)
         except(np.linalg.LinAlgError):
             logging.info("SVD did not converge. Skipping")
             continue
@@ -267,6 +278,14 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         for layer in range(len(layers)-1):
             logging.info(f'# Layer {layer}')
 
+            if mm_energy_array:
+                mm_energy[layer] = calc_mismatch_energy_fast(
+                                    Gamma2_array[layer].numpy(), back_weights_array[-1][layer].T, fw_weights_array[-1][layer], 0.
+                                    )
+            else:
+                mm_energy[layer] = 1.0
+            logging.info(f'The mismatch energy (normalized to value at epoch 0) in layer {layer} is: {mm_energy[layer]}')
+
             # calculate the cosine similarity using the Frobenius norm
             # between the error backpropagated using the tranpose of the weights
             # and the dynamical backwards matrix
@@ -279,6 +298,32 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
             logging.info(f'The cosine between the errors propagated using the '
                          f'backwards weights and the transpose of the forward weights '
                          f'in layer {layer} is: {cos_vecs_trans[layer]}')
+
+            # calculate the cosine similarity using the Frobenius norm
+            # between the error backpropagated using the pseudoinverse
+            # and the dynamical backwards matrix
+            cos_vecs_pinv[layer] = np.round(
+                cos_sim_vec(error_vecs_B[-1-layer], error_vecs_pinv[-1-layer]).tolist()
+                ,6)
+                
+            if cos_vecs_pinv[layer] > 1 or cos_vecs_pinv[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos_vecs_pinv[layer]}")
+            logging.info(f'The cosine between the errors propagated using the '
+                         f'backwards weights and the pseudoinverse '
+                         f'in layer {layer} is: {cos_vecs_pinv[layer]}')
+
+            # calculate the cosine similarity using the Frobenius norm
+            # between the error backpropagated using the data-specific pseudoinverse
+            # and the dynamical backwards matrix
+            cos_vecs_dsp[layer] = np.round(
+                cos_sim_vec(error_vecs_B[-1-layer], error_vecs_dspinv[-1-layer]).tolist()
+                ,6)
+                
+            if cos_vecs_dsp[layer] > 1 or cos_vecs_dsp[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos_vecs_dsp[layer]}")
+            logging.info(f'The cosine between the errors propagated using the '
+                         f'backwards weights and the data-specific pseudoinverse '
+                         f'in layer {layer} is: {cos_vecs_dsp[layer]}')
 
             # calculate the cosine similarity using the Frobenius norm
             # between the tranpose of the weights
@@ -295,19 +340,6 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                                  f'in layer {layer} is: {cos_trans[layer]}')
 
             # calculate the cosine similarity using the Frobenius norm
-            # between the error backpropagated using the pseudoinverse
-            # and the dynamical backwards matrix
-            cos_vecs_pinv[layer] = np.round(
-                cos_sim_vec(error_vecs_B[-1-layer], error_vecs_pinv[-1-layer]).tolist()
-                ,6)
-                
-            if cos_vecs_pinv[layer] > 1 or cos_vecs_pinv[layer] < -1:
-                raise ValueError(f"Cosine between tensors has returned invalid value {cos_vecs_pinv[layer]}")
-            logging.info(f'The cosine between the errors propagated using the '
-                         f'backwards weights and the pseudoinverse '
-                         f'in layer {layer} is: {cos_vecs_pinv[layer]}')
-
-            # calculate the cosine similarity using the Frobenius norm
             # between the pseudoinverse
             # and the dynamical backwards matrix
             cos_pinv[layer] = np.round(
@@ -320,19 +352,6 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos_pinv[layer]}")
             logging.info(f'The cosine between the backwards weights and the pseudoinverse '
                                  f'in layer {layer} is: {cos_pinv[layer]}')
-
-            # calculate the cosine similarity using the Frobenius norm
-            # between the error backpropagated using the data-specific pseudoinverse
-            # and the dynamical backwards matrix
-            cos_vecs_dsp[layer] = np.round(
-                cos_sim_vec(error_vecs_B[-1-layer], error_vecs_dspinv[-1-layer]).tolist()
-                ,6)
-                
-            if cos_vecs_dsp[layer] > 1 or cos_vecs_dsp[layer] < -1:
-                raise ValueError(f"Cosine between tensors has returned invalid value {cos_vecs_dsp[layer]}")
-            logging.info(f'The cosine between the errors propagated using the '
-                         f'backwards weights and the data-specific pseudoinverse '
-                         f'in layer {layer} is: {cos_vecs_dsp[layer]}')
 
             # calculate the cosine similarity using the Frobenius norm
             # between the data-specific pseudoinverse
@@ -349,27 +368,6 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                                  f'in layer {layer} is: {cos_dspinv[layer]}')
 
 
-
-            # as an alternative measure of convergence, we also
-            # calculate the distance between tensors
-            # dist[layer] = np.round(
-            #     exp_aux.norm_distance(
-            #         torch.from_numpy(back_weights_array[-1][layer].T),
-            #         torch.linalg.pinv(torch.from_numpy(fw_weights_array[-1][layer]))
-            #         ).tolist()
-            #     ,6)
-            # logging.info(f'The distance between the backwards weights and the (!) pseudoinverse '
-            #                      f'in layer {layer} is: {dist[layer]}')
-
-            # dist[layer] = np.round(
-            #     exp_aux.norm_distance(
-            #         torch.from_numpy(back_weights_array[-1][layer].T),
-            #         dataspecPinv_array[layer].float()
-            #         ).tolist()
-            #     ,6)
-            # logging.info(f'The distance between the backwards weights and the data-specific pseudoinverse '
-            #                      f'in layer {layer} is: {dist[layer]}')
-
             # calculate distribution of weights for later analysis
             fw_weights_dist[layer] = torch.std_mean(torch.from_numpy(fw_weights_array[-1][layer]), unbiased=True)
             logging.info(f'Mean and stdev of forward weights in layer {layer} is: {fw_weights_dist[layer][1]} +- {fw_weights_dist[layer][0]}')
@@ -385,6 +383,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         cos_vecs_dsp_array.append(cos_vecs_dsp.copy())
         cos_vecs_pinv_array.append(cos_vecs_pinv.copy())
 
+        mm_energy_array.append(mm_energy.copy())
+
         fw_weights_dist_array.append(fw_weights_dist.copy())
         back_weights_dist_array.append(back_weights_dist.copy())
 
@@ -396,26 +396,30 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                       epoch_array=epoch_array,
                       data_arrays= [np.array(cos_vecs_trans_array).T,
                                     np.array(cos_vecs_pinv_array).T,
-                                    np.array(cos_vecs_dsp_array).T],
+                                    np.array(cos_vecs_dsp_array).T,
+                                    np.array(mm_energy_array).T],
                       error_array=100*np.array(error_ratio_array),
                       limits=[-1,1],
                       labels=  ["cos of errors B vs. W^T",
                                 "cos of errors B vs. pinv(W)",
-                                "cos of errors B vs. ds-pinv(W)"],
-                      linestyles=['-.', '--', '-']
+                                "cos of errors B vs. ds-pinv(W)",
+                                "mm energy (B,W) / a.u."],
+                      linestyles=['-.', '-', '-.', 'dotted']
                     )
 
     visu.evaluation(axes_mats,
                       epoch_array=epoch_array,
                       data_arrays= [np.array(cos_trans_array).T,
                                     np.array(cos_pinv_array).T,
-                                    np.array(cos_dspinv_array).T],
+                                    np.array(cos_dspinv_array).T,
+                                    np.array(mm_energy_array).T],
                       error_array=100*np.array(error_ratio_array),
                       limits=[-1,1],
                       labels=  ["cos of B vs. W^T",
                                 "cos of B vs. pinv(W)",
-                                "cos of B vs. ds-pinv(W)"],
-                      linestyles=['-.', '--', '-']
+                                "cos of B vs. ds-pinv(W)",
+                                "mm energy (B,W) / a.u."],
+                      linestyles=['-.', '-', '-.', 'dotted']
                     )
 
     # # Add labels
