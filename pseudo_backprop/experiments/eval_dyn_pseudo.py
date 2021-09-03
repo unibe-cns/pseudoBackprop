@@ -143,10 +143,10 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
     fw_weights_array = []
     back_weights_array = []
-    fw_norm_weights = [0]*(len(layers)-1)
-    back_norm_weights = [0]*(len(layers)-1)
-    fw_norm_weights_array = []
-    back_norm_weights_array = []
+    fw_weights_dist = [0]*(len(layers)-1)
+    back_weights_dist = [0]*(len(layers)-1)
+    fw_weights_dist_array = []
+    back_weights_dist_array = []
     cos_trans_array = []
     cos_trans = [0]*(len(layers)-1)
     cos_pinv_array = []
@@ -370,11 +370,11 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
             # logging.info(f'The distance between the backwards weights and the data-specific pseudoinverse '
             #                      f'in layer {layer} is: {dist[layer]}')
 
-            # calculate norm of weights for later analysis
-            fw_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(fw_weights_array[-1][layer]))
-            logging.info(f'The norm of the forward weights in layer {layer} is: {fw_norm_weights[layer]}')
-            back_norm_weights[layer] = torch.linalg.norm(torch.from_numpy(back_weights_array[-1][layer]))
-            logging.info(f'The norm of the backward weights in layer {layer} is: {back_norm_weights[layer]}')
+            # calculate distribution of weights for later analysis
+            fw_weights_dist[layer] = torch.std_mean(torch.from_numpy(fw_weights_array[-1][layer]), unbiased=True)
+            logging.info(f'Mean and stdev of forward weights in layer {layer} is: {fw_weights_dist[layer][1]} +- {fw_weights_dist[layer][0]}')
+            back_weights_dist[layer] = torch.std_mean(torch.from_numpy(back_weights_array[-1][layer]), unbiased=True)
+            logging.info(f'Mean and stdev of backward weights in layer {layer} is: {back_weights_dist[layer][1]} +- {back_weights_dist[layer][0]}')
         
         # dist_array.append(dist.copy())
         cos_trans_array.append(cos_trans.copy())
@@ -385,8 +385,8 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         cos_vecs_dsp_array.append(cos_vecs_dsp.copy())
         cos_vecs_pinv_array.append(cos_vecs_pinv.copy())
 
-        fw_norm_weights_array.append(fw_norm_weights.copy())
-        back_norm_weights_array.append(back_norm_weights.copy())
+        fw_weights_dist_array.append(fw_weights_dist.copy())
+        back_weights_dist_array.append(back_weights_dist.copy())
 
     # plot results
     fig_vecs, axes_vecs = plt.subplots(len(layers), 1,figsize=(8,3*(len(layers)+1)))
@@ -442,8 +442,11 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
     layer_names = [str(i) for i in list(range(len(cos_trans_array[-1])))]
     to_save = np.array([epoch_array, image_array, error_ratio_array])
     to_save = np.concatenate(
-        (to_save, np.array(fw_norm_weights_array).T,
-            np.array(back_norm_weights_array).T,
+        (to_save,
+            np.array(fw_weights_dist_array).T[1],
+            np.array(fw_weights_dist_array).T[0],
+            np.array(back_weights_dist_array).T[1],
+            np.array(back_weights_dist_array).T[0],
             np.array(cos_vecs_trans_array).T,
             np.array(cos_vecs_dsp_array).T,
             np.array(cos_vecs_pinv_array).T,
@@ -453,8 +456,10 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         axis=0).T
     file_to_save_cos = os.path.join(model_folder, f'train_results_dyn_pseudo.csv')
     header = ('epochs, images, error, '
-             + 'W layer ' + ', W layer '.join([layer for layer in layer_names])
-             + ', B layer ' + ', B layer '.join([layer for layer in layer_names])
+             + 'W mean layer ' + ', W mean layer '.join([layer for layer in layer_names])
+             + ', W std layer ' + ', W std layer '.join([layer for layer in layer_names])
+             + ', B mean layer ' + ', B mean layer '.join([layer for layer in layer_names])
+             + ', B std layer ' + ', B std layer '.join([layer for layer in layer_names])
              + ', cos vec W.T layer ' + ', cos vec W.T layer '.join([layer for layer in layer_names])
              + ', cos vec pinv layer ' + ', cos vec pinv layer '.join([layer for layer in layer_names])
              + ', cos vec dspinv layer ' + ', cos vec dspinv layer '.join([layer for layer in layer_names])
