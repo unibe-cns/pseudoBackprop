@@ -224,6 +224,8 @@ def main(params, per_images, num_workers):
             if PRINT_DEBUG: timer = time.time()
             input_data = next(iter(data_samp))[0].view(len(trainset), -1)
             if PRINT_DEBUG: logging.info(f'Time to load data: {time.time()-timer}s')
+            
+            if dataset_type in ["yinyang", "parity"]: input_data = input_data.float()
             # calling the second dataloader changes the RNG state, so we reset
             torch.manual_seed(random_seed)
             # initialise an array to save the mismatch energies
@@ -309,7 +311,7 @@ def main(params, per_images, num_workers):
                                 params["gen_samples"], -1).to(device)
                         with torch.no_grad():
                             backprop_net.redo_backward_weights(
-                                dataset=sub_data)
+                                dataset=sub_data.float())
                 counter += 1
 
             # get the inputs; data is a list of [inputs, labels]
