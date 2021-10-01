@@ -1,6 +1,7 @@
 """Standalone functions for auxillary computations."""
 import numpy as np
 import torch
+from scipy.linalg import sqrtm
 
 
 def evaluate_model(network_model, testloader, batch_size, device='cpu',
@@ -150,10 +151,12 @@ def generalized_pseudo(w_matrix, dataset):
     mean = np.mean(np_dataset, axis=0)
     gammasquared = covariance + np.outer(mean,mean)
     
-    # make the singular value decomposition
-    u_matrix, s_matrix, vh_matrix = np.linalg.svd(gammasquared)
-    # Calculate the generalized pseudoinverse
-    gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
+    # # make the singular value decomposition
+    # u_matrix, s_matrix, vh_matrix = np.linalg.svd(gammasquared)
+    # # Calculate the generalized pseudoinverse
+    # gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
+    gamma = sqrtm(gammasquared)
+    print(gamma @ gamma - gammasquared)
     gen_pseudo = np.dot(gamma, np.linalg.pinv(np.dot(w_matrix, gamma)))
 
     return torch.from_numpy(gen_pseudo)
