@@ -90,7 +90,7 @@ def main(params, dataset, per_images, num_workers):
                                              transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset))
+                          Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset_type))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=num_workers)
     nb_classes = len(testset.classes)
@@ -121,7 +121,6 @@ def main(params, dataset, per_images, num_workers):
     elif dataset_type == "yinyang":
         nb_batches = int(dataset_size / per_images)
     elif dataset_type == "parity":
-        per_images = dataset_size // 2
         nb_batches = int(dataset_size / per_images)
 
     # run over the output and evaluate the models
