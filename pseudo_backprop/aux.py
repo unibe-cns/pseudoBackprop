@@ -156,7 +156,7 @@ def generalized_pseudo(w_matrix, dataset):
     # # Calculate the generalized pseudoinverse
     # gamma = np.dot(np.dot(u_matrix, np.diag(np.sqrt(s_matrix))), vh_matrix)
     gamma = sqrtm(gammasquared)
-    print(gamma @ gamma - gammasquared)
+    #print(gamma @ gamma - gammasquared)
     gen_pseudo = np.dot(gamma, np.linalg.pinv(np.dot(w_matrix, gamma)))
 
     return torch.from_numpy(gen_pseudo)
