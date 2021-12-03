@@ -10,6 +10,7 @@ import numpy as np
 from torch import nn
 from pseudo_backprop.experiments import exp_aux
 from pseudo_backprop.experiments.yinyang_dataset.dataset import YinYangDataset
+from pseudo_backprop.experiments.parity_dataset.dataset import ParityDataset
 from pseudo_backprop.aux import evaluate_model
 from pseudo_backprop.aux import loss_error
 from pseudo_backprop.aux import calc_mismatch_energy_fast
@@ -52,9 +53,9 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         bias = True
 
 
-    if dataset_type == "yinyang":
+    if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
-        random_seed = params["random_seed"]
+    random_seed = params["random_seed"]
     if "criterion" not in params:
         loss_criterion = "MSELoss"
     else:
@@ -92,6 +93,10 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
     elif dataset_type == "yinyang":
         trainset = YinYangDataset(size = dataset_size, seed = random_seed)
         trainset.classes = trainset.class_names
+    elif dataset_type == "parity":
+        trainset = ParityDataset(inputs = layers[0], samples=dataset_size, seed = random_seed)
+        batch_size = params["batch_size"]
+        trainset.classes = trainset.class_names
 
     elif dataset_type == "mnist":
         trainset = torchvision.datasets.MNIST(params["dataset_path"],
@@ -100,8 +105,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                                               transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10', 'yinyang']".format(
-            dataset_type))
+                          Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset_type))
 
     nb_classes = len(trainset.classes)
     logging.info('The number of classes is %i', nb_classes)
@@ -143,7 +147,6 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
     elif dataset_type == "yinyang":
         nb_batches = int(dataset_size / per_images)
     elif dataset_type == "parity":
-        per_images = dataset_size // 2
         nb_batches = int(dataset_size / per_images)
 
     # load the saved network states and calculate cosine similarity

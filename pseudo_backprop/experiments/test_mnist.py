@@ -90,7 +90,7 @@ def main(params, dataset, per_images, num_workers):
                                              transform=transform)
     else:
         raise ValueError("The received dataset <<{}>> is not implemented. \
-                          Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset))
+                          Choose from ['mnist', 'cifar10', 'yinyang', 'parity']".format(dataset_type))
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=True, num_workers=num_workers)
     nb_classes = len(testset.classes)
@@ -121,7 +121,6 @@ def main(params, dataset, per_images, num_workers):
     elif dataset_type == "yinyang":
         nb_batches = int(dataset_size / per_images)
     elif dataset_type == "parity":
-        per_images = dataset_size // 2
         nb_batches = int(dataset_size / per_images)
 
     # run over the output and evaluate the models
@@ -167,17 +166,20 @@ def main(params, dataset, per_images, num_workers):
         conf_matrix_array[index] = confusion_matrix.tolist()
         error_ratio_array.append(1 - class_ratio)
 
-        if model_type == 'dyn_pseudo':
 
-            norm_forward_weight = []
+        norm_forward_weight = []
+        for i in range(len(backprop_net.synapses)):
+                   norm_forward_weight.append(np.linalg.norm(backprop_net.synapses[i].get_forward().cpu()))
+                   # logging.info(f'The Frobenius norm of the forward weights in layer {i} is: {norm_forward_weight[-1]}')
+
+        norm_forward_weight_array.append(np.array(norm_forward_weight.copy()).T)
+
+        if model_type != 'backprop':
             norm_back_weight = []
             for i in range(len(backprop_net.synapses)):
-                       norm_forward_weight.append(np.linalg.norm(backprop_net.synapses[i].get_forward().cpu()))
-                       # logging.info(f'The Frobenius norm of the forward weights in layer {i} is: {norm_forward_weight[-1]}')
-                       norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward().cpu()))
-                       # logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
+                   norm_back_weight.append(np.linalg.norm(backprop_net.synapses[i].get_backward().cpu()))
+                   # logging.info(f'The Frobenius norm of the backward weights in layer {i} is: {norm_back_weight[-1]}')
 
-            norm_forward_weight_array.append(np.array(norm_forward_weight.copy()).T)
             norm_back_weight_array.append(np.array(norm_back_weight.copy()).T)
 
         logging.info(f'The final classification ratio is: {class_ratio}')
@@ -197,19 +199,20 @@ def main(params, dataset, per_images, num_workers):
                            f'confusion_matrix_{dataset}.json'), 'w') as file_f:
         json.dump(conf_matrix_array, file_f, sort_keys=True, indent=4)
 
-    if model_type == 'dyn_pseudo':
-        # convert array of weight matrices to numpy and save
-        # norm_forward_weight_array = np.array(norm_forward_weight_array)
-        # norm_back_weight_array = np.array(norm_back_weight_array)
-        # to_save_matrix_norms = np.array(norm_forward_weight_array, norm_back_weight_array]).T
+    # convert array of weight matrices to numpy and save
+    # norm_forward_weight_array = np.array(norm_forward_weight_array)
+    # norm_back_weight_array = np.array(norm_back_weight_array)
+    # to_save_matrix_norms = np.array(norm_forward_weight_array, norm_back_weight_array]).T
 
-        layer_names = [str(i) for i in list(range(len(norm_forward_weight_array[-1])))]
+    layer_names = [str(i) for i in list(range(len(norm_forward_weight_array[-1])))]
 
-        file_to_save_fw_norms = os.path.join(model_folder, f'forward_norms_{dataset}.csv')
-        to_save = np.array([epoch_array, image_array])
-        to_save = np.append(to_save, np.array(norm_forward_weight_array).T, axis=0).T
-        np.savetxt(file_to_save_fw_norms, to_save, delimiter=',',
-                       header='epochs, images, ' + 'layer ' + ' ,'.join([layer for layer in layer_names]))
+    file_to_save_fw_norms = os.path.join(model_folder, f'forward_norms_{dataset}.csv')
+    to_save = np.array([epoch_array, image_array])
+    to_save = np.append(to_save, np.array(norm_forward_weight_array).T, axis=0).T
+    np.savetxt(file_to_save_fw_norms, to_save, delimiter=',',
+                   header='epochs, images, ' + 'layer ' + ' ,'.join([layer for layer in layer_names]))
+
+    if model_type != 'backprop':
 
         file_to_save_bw_norms = os.path.join(model_folder, f'backwards_norms_{dataset}.csv')
         to_save = np.array([epoch_array, image_array])
