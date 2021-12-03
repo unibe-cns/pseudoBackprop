@@ -114,6 +114,10 @@ def main(params, per_images, num_workers):
         raise ValueError("The received loss criterion <<{}>> is not implemented. \
                           Choose from [MSELoss, CrossEntropyLoss]".format(
             loss_criterion))
+    if "freeze_output_layer" in params:
+        freeze_output_layer = params["freeze_output_layer"]
+    else:
+        freeze_output_layer = False
 
     if dataset_type in ["yinyang", "parity"]:
         dataset_size = params["dataset_size"]
@@ -152,6 +156,8 @@ def main(params, per_images, num_workers):
             logging.info(f'Regularizer is fixed. Deactivating evaluation of mismatch energy.')
         if normalize_inputs:
             logging.info(f'Normalize active: using pseudoinverse of activations instead of transpose.')
+    if freeze_output_layer:
+        logging.info(f'Output layer is frozen.')
 
     # set random seed
     torch.manual_seed(random_seed)
@@ -264,6 +270,12 @@ def main(params, per_images, num_workers):
         raise ValueError("The chosen optimizer <<{}>> is not implemented. \
                           Choose from ['SGD', 'Adam']".format(
             optimizer_type))
+
+    # optionally, freeze output layer
+    if freeze_output_layer:
+        backprop_net.synapses[-1].weight.requires_grad = False
+        if len(layers) == 2:
+            raise ValueError("All weights frozen, optimizer has nothing to do, aborting.")
 
     # set up scheduler for learning rate decay. KM: disabled, as no improvement seen for MNIST/BP
     #lmbda = lambda epoch: 1.0
