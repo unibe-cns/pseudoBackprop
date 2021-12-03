@@ -515,7 +515,7 @@ class PseudoBackpropModule(nn.Module):
     def redo_backward(self):
         """Recalculate the matrix that is used for the backwards direction
         """
-        logging.debug('Redo backward called')
+        logging.info('Redo backward called')
         self.pinv = nn.Parameter(torch.linalg.pinv(self.weight.detach()),
                                  requires_grad=False)
 
