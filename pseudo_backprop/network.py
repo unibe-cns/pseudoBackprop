@@ -168,9 +168,11 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         return inputs
 
-    def redo_backward_weights(self, dataset=None):
+    def redo_backward_weights(self, dataset=None, noise=None):
         """Recalculate the backward weights according to the model
            Do nothing if the layer has no fucntion for it.
+
+           Add normal distributed noise if parameter noise is given.
         """
 
         if self.mode == 'pseudo':
@@ -183,6 +185,10 @@ class FullyConnectedNetwork(torch.nn.Module):
                 w_forward = synapse.get_forward()
                 input_data = self.forward_to_hidden(dataset,
                                                     index)
+                if noise:
+                    logging.debug(f'Before noise: {torch.linalg.norm(input_data)}')
+                    input_data = torch.normal(mean=noise[0], std=noise[1], size=list(input_data.size()))
+                    logging.debug(f'After noise: {torch.linalg.norm(input_data)}')
                 b_backward = aux.generalized_pseudo(
                     w_forward.detach().cpu().numpy(),
                     input_data).to(self.device)

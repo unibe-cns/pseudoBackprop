@@ -212,28 +212,19 @@ def main(params, per_images, num_workers):
     # for gen_pseudo and dyn_pseudo, we init a second dataloader
     if model_type == "gen_pseudo" or 'dyn_pseudo':
         if "noise" in params:
-            logging.info('Using samples with noise for gen-pseudo.')
-            gen_transform=transforms.Compose([
-                transforms.ToTensor(),
-                # transforms.Normalize((0.1307,), (0.3081,)),
-                AddGaussianNoise(params["noise"][0], params["noise"][1])
-            ])
+            noise = params['noise']
+            logging.info(f'Adding noise N ({noise[0]},{noise[1]}) to samples for gen-pseudo.')
         else:
-            gen_transform = transform
-
-        genset = torchvision.datasets.MNIST(params["dataset_path"],
-                                              train=True,
-                                              download=True,
-                                              transform=gen_transform)
+            noise = None
 
         # (gen pseudo needs data to calc ds-pinv of W)
         if model_type == "gen_pseudo":
             rand_sampler = torch.utils.data.RandomSampler(
-                genset,
+                trainset,
                 num_samples=params["gen_samples"],
                 replacement=True)
             genpseudo_samp = torch.utils.data.DataLoader(
-                genset,
+                trainset,
                 batch_size=params["gen_samples"],
                 sampler=rand_sampler)
             genpseudo_iterator = iter(genpseudo_samp)
@@ -338,7 +329,7 @@ def main(params, per_images, num_workers):
                                 params["gen_samples"], -1).to(device)
                         with torch.no_grad():
                             backprop_net.redo_backward_weights(
-                                dataset=sub_data.float())
+                                dataset=sub_data.float(), noise=noise)
                 counter += 1
 
             # get the inputs; data is a list of [inputs, labels]
