@@ -44,9 +44,9 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         dataset_type = "mnist"
     else:
         dataset_type = params["dataset"]
-    if model_type != 'dyn_pseudo':
+    if model_type not in ['dyn_pseudo', 'pseudo_backprop', 'gen_pseudo']:
         raise ValueError("""Invalid model type. This action can only\
-            be run for dynamical pseudobackprop""")
+            be run for pseudobackprop-like models""")
     if "bias" in params:
             bias = params["bias"]
     else:
@@ -60,15 +60,17 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         loss_criterion = "MSELoss"
     else:
         loss_criterion = params["criterion"]
-    # regularizer can be given as an array or single value
-    if not isinstance(params["size_of_regularizer"], list):
-        regularizer_array = [params["size_of_regularizer"]] * (len(layers) - 1)
-    elif len(params["size_of_regularizer"]) == len(layers) - 1:
-        regularizer_array = params["size_of_regularizer"]
-    else:
-        raise ValueError(f"Number of given values for the regularizer\
-            does not match number of backward matrices ({len(layers) - 1})\
-            (if all entries are equal, the value can also be given as a scalar).")
+
+    if model_type == 'dyn_pseudo':
+        # regularizer can be given as an array or single value
+        if not isinstance(params["size_of_regularizer"], list):
+            regularizer_array = [params["size_of_regularizer"]] * (len(layers) - 1)
+        elif len(params["size_of_regularizer"]) == len(layers) - 1:
+            regularizer_array = params["size_of_regularizer"]
+        else:
+            raise ValueError(f"Number of given values for the regularizer\
+                does not match number of backward matrices ({len(layers) - 1})\
+                (if all entries are equal, the value can also be given as a scalar).")
 
     # set random seed
     torch.manual_seed(params["random_seed"])
@@ -166,12 +168,16 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
     cos_pinv = [0]*(len(layers)-1)
     cos_dspinv_array = []
     cos_dspinv = [0]*(len(layers)-1)
+    cos_WB_id_array = []
+    cos_WB_id = [0]*(len(layers)-1)
     cos_vecs_trans_array = []
     cos_vecs_trans = [0]*(len(layers)-1)
     cos_vecs_pinv_array = []
     cos_vecs_pinv = [0]*(len(layers)-1)
     cos_vecs_dsp_array = []
     cos_vecs_dsp = [0]*(len(layers)-1)
+    cos_WBe_e_array = []
+    cos_WBe_e = [0]*(len(layers)-1)
     mm_energy_array = []
     mm_energy = [0]*(len(layers)-1)
 
@@ -223,7 +229,14 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
         # extract the backwards matrix at this stage
         fw_weights_array.append(backprop_net.get_forward_weights().copy())
-        back_weights_array.append(backprop_net.get_backward_weights().copy())
+
+        # for pseudo-backprop and data-specific, we need to transpose weights
+        if model_type in ['pseudo_backprop', 'gen_pseudo']:
+            bw_weight_current_layer = [bw_weight.T for bw_weight in backprop_net.get_backward_weights().copy()]
+        else:
+            bw_weight_current_layer = backprop_net.get_backward_weights().copy()
+        
+        back_weights_array.append(bw_weight_current_layer)
 
         # generate a list of the data-specific pinverse matrices
         logging.info("Calculating data-specific pseudoinverse matrices")
@@ -291,7 +304,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
             # calculate the cosine similarity using the Frobenius norm
             # between the error backpropagated using the tranpose of the weights
-            # and the dynamical backwards matrix
+            # and the given backwards matrix
             cos_vecs_trans[layer] = np.round(
                 cos_sim_vec(error_vecs_B[-1-layer], error_vecs_trans[-1-layer]).tolist()
                 ,6)
@@ -304,7 +317,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
             # calculate the cosine similarity using the Frobenius norm
             # between the error backpropagated using the pseudoinverse
-            # and the dynamical backwards matrix
+            # and the given backwards matrix
             cos_vecs_pinv[layer] = np.round(
                 cos_sim_vec(error_vecs_B[-1-layer], error_vecs_pinv[-1-layer]).tolist()
                 ,6)
@@ -317,7 +330,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
             # calculate the cosine similarity using the Frobenius norm
             # between the error backpropagated using the data-specific pseudoinverse
-            # and the dynamical backwards matrix
+            # and the given backwards matrix
             cos_vecs_dsp[layer] = np.round(
                 cos_sim_vec(error_vecs_B[-1-layer], error_vecs_dspinv[-1-layer]).tolist()
                 ,6)
@@ -330,7 +343,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
             # calculate the cosine similarity using the Frobenius norm
             # between the tranpose of the weights
-            # and the dynamical backwards matrix
+            # and the given backwards matrix
             cos_trans[layer] = np.round(
                 exp_aux.cosine_similarity_tensors(
                     torch.from_numpy(back_weights_array[-1][layer].T),
@@ -344,7 +357,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
             # calculate the cosine similarity using the Frobenius norm
             # between the pseudoinverse
-            # and the dynamical backwards matrix
+            # and the given backwards matrix
             cos_pinv[layer] = np.round(
                 exp_aux.cosine_similarity_tensors(
                     torch.from_numpy(back_weights_array[-1][layer].T),
@@ -358,7 +371,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
 
             # calculate the cosine similarity using the Frobenius norm
             # between the data-specific pseudoinverse
-            # and the dynamical backwards matrix
+            # and the given backwards matrix
             cos_dspinv[layer] = np.round(
                 exp_aux.cosine_similarity_tensors(
                     torch.from_numpy(back_weights_array[-1][layer].T),
@@ -369,6 +382,38 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
                 raise ValueError(f"Cosine between tensors has returned invalid value {cos_dspinv[layer]}")
             logging.info(f'The cosine between the backwards weights and the data-specific pseudoinverse '
                                  f'in layer {layer} is: {cos_dspinv[layer]}')
+
+            # calculate the cosine similarity using the Frobenius norm
+            # between the product W B
+            # and the identity matrix
+            cos_WB_id[layer] = np.round(
+                exp_aux.cosine_similarity_tensors(
+                    torch.from_numpy(fw_weights_array[-1][layer] @ back_weights_array[-1][layer].T),
+                    torch.eye(layers[layer+1])
+                    ).tolist()
+                ,6)
+            if cos_WB_id[layer] > 1 or cos_WB_id[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos_WB_id[layer]}")
+            logging.info(f'The cosine between W @ B and identity (note: this is only layer-wise, not the product of Ws or Bs!) '
+                                 f'in layer {layer} is: {cos_WB_id[layer]}')
+
+            # calculate the cosine similarity using the Frobenius norm
+            # between the error backpropagated and forward propagated
+            # and the unpropagated error
+            cos_WBe_e[layer] = np.round(
+                cos_sim_vec(
+                    torch.matmul(
+                        torch.from_numpy(fw_weights_array[-1][layer] @ back_weights_array[-1][layer].T),
+                        error_vecs_B[-layer+1]
+                    ),
+                    error_vecs_B[-layer+1]).tolist()
+                ,6)
+                
+            if cos_WBe_e[layer] > 1 or cos_WBe_e[layer] < -1:
+                raise ValueError(f"Cosine between tensors has returned invalid value {cos_WBe_e[layer]}")
+            logging.info(f'The cosine between the errors backpropagated and forward propagated'
+                         f'and the unpropagated error (note: this is only layer-wise, not the product of Ws or Bs!) '
+                         f'in layer {layer} is: {cos_WBe_e[layer]}')
 
 
             # calculate distribution of weights for later analysis

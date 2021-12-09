@@ -285,3 +285,18 @@ def calc_mismatch_energy_fast(Gamma2, B, W, alpha):
     mismatch_energy = .5 * np.trace((I - B @ W).T @ (I - B @ W) @ Gamma2) + alpha/2. * np.linalg.norm(B)**2
 
     return mismatch_energy
+
+
+class AddGaussianNoise(object):
+    """ functionality to add noise to data. by ptrblck@torch"""
+
+    def __init__(self, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+        
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
+

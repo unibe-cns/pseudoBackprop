@@ -211,14 +211,29 @@ def main(params, per_images, num_workers):
 
     # for gen_pseudo and dyn_pseudo, we init a second dataloader
     if model_type == "gen_pseudo" or 'dyn_pseudo':
+        if "noise" in params:
+            logging.info('Using samples with noise for gen-pseudo.')
+            gen_transform=transforms.Compose([
+                transforms.ToTensor(),
+                # transforms.Normalize((0.1307,), (0.3081,)),
+                AddGaussianNoise(params["noise"][0], params["noise"][1])
+            ])
+        else:
+            gen_transform = transform
+
+        genset = torchvision.datasets.MNIST(params["dataset_path"],
+                                              train=True,
+                                              download=True,
+                                              transform=gen_transform)
+
         # (gen pseudo needs data to calc ds-pinv of W)
         if model_type == "gen_pseudo":
             rand_sampler = torch.utils.data.RandomSampler(
-                trainset,
+                genset,
                 num_samples=params["gen_samples"],
                 replacement=True)
             genpseudo_samp = torch.utils.data.DataLoader(
-                trainset,
+                genset,
                 batch_size=params["gen_samples"],
                 sampler=rand_sampler)
             genpseudo_iterator = iter(genpseudo_samp)
