@@ -75,6 +75,12 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
     # set random seed
     torch.manual_seed(params["random_seed"])
 
+    # set bool for calcualtion of covariance matrix as Gamma^2 (instead of <rr^t>)
+    if "covmat" in params:
+            bool_covmat = params["covmat"]
+        else:
+            bool_covmat = False
+
     # look for gpu device, use gpu if available
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     device = torch.device("cpu")
@@ -242,7 +248,7 @@ def main(params, val_epoch = None, per_images = None, num_workers = 0):
         logging.info("Calculating data-specific pseudoinverse matrices")
 
         try:
-            dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data)
+            dataspecPinv_array = backprop_net.get_dataspec_pinverse(dataset=sub_data, covmat=covmat)
             Gamma2_array = backprop_net.get_gamma2_matrix(dataset=sub_data)
         except(np.linalg.LinAlgError):
             logging.info("SVD did not converge. Skipping")

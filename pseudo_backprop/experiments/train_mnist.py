@@ -216,6 +216,13 @@ def main(params, per_images, num_workers):
             logging.info(f'Adding noise N ({noise[0]},{noise[1]}) to samples for gen-pseudo.')
         else:
             noise = None
+        if "covmat" in params:
+            bool_covmat = params["covmat"]
+        else:
+            bool_covmat = False
+
+        if bool_covmat: logging.info(f'Using covariance matrix for gen-pseudo.')
+        else: logging.info(f'Using <rr^t> for gen-pseudo.')
 
         # (gen pseudo needs data to calc ds-pinv of W)
         if model_type == "gen_pseudo":
@@ -329,7 +336,7 @@ def main(params, per_images, num_workers):
                                 params["gen_samples"], -1).to(device)
                         with torch.no_grad():
                             backprop_net.redo_backward_weights(
-                                dataset=sub_data.float(), noise=noise)
+                                dataset=sub_data.float(), noise=noise, covmat=bool_covmat)
                 counter += 1
 
             # get the inputs; data is a list of [inputs, labels]

@@ -168,7 +168,7 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         return inputs
 
-    def redo_backward_weights(self, dataset=None, noise=None):
+    def redo_backward_weights(self, dataset=None, noise=None, covmat=False):
         """Recalculate the backward weights according to the model
            Do nothing if the layer has no fucntion for it.
 
@@ -191,10 +191,10 @@ class FullyConnectedNetwork(torch.nn.Module):
                     logging.debug(f'After noise: {torch.linalg.norm(input_data)}')
                 b_backward = aux.generalized_pseudo(
                     w_forward.detach().cpu().numpy(),
-                    input_data).to(self.device)
+                    input_data, covmat=covmat).to(self.device)
                 synapse.set_backward(b_backward)
 
-    def get_dataspec_pinverse(self, dataset=None):
+    def get_dataspec_pinverse(self, dataset=None, covmat=False):
         """Calculate the data-specific pseudoinverse matrices.
            This function can be used to compare *any* backward matrix
            to the data-specific pseudoinverse
@@ -207,7 +207,7 @@ class FullyConnectedNetwork(torch.nn.Module):
                                                 index).clone().detach().cpu()
             ds_pinv.append(aux.generalized_pseudo(
                 w_forward.detach().cpu().numpy(),
-                input_data)
+                input_data, covmat=covmat)
             )
 
         return ds_pinv

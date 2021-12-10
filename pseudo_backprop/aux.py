@@ -138,18 +138,21 @@ def torchcov(m, rowvar=True, inplace=False):
     mt = m.t()  # if complex: mt = m.t().conj()
     return fact * m.matmul(mt).squeeze()
 
-def generalized_pseudo(w_matrix, dataset):
+def generalized_pseudo(w_matrix, dataset, covmat=False):
     """calculate the dataspecific pseudoinverse
 
     Args:
         w_matrix (torch.tensor): forward matrix
         dataset (torch.tensor): dataset
+        covmat: if false, uses <rr^t> instead of covariance matrix
     """
 
     np_dataset = dataset.detach().cpu().numpy()
     covariance = np.cov(np_dataset.T)
     mean = np.mean(np_dataset, axis=0)
-    gammasquared = covariance + np.outer(mean,mean)
+    gammasquared = covariance
+    if not covmat:
+        gammasquared += np.outer(mean,mean)
     
     # # make the singular value decomposition
     # u_matrix, s_matrix, vh_matrix = np.linalg.svd(gammasquared)
