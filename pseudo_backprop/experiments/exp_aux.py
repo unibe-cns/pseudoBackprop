@@ -14,7 +14,7 @@ def load_network(model_type, layers, net_params):
     """
 
     # make the networks
-    possible_networks = ['fa', 'backprop', 'pseudo_backprop', 'gen_pseudo', 'dyn_pseudo']
+    possible_networks = ['fa', 'backprop', 'pseudo_backprop', 'gen_pseudo', 'dyn_pseudo', 'DRL']
     if model_type == 'fa':
         backprop_net = FullyConnectedNetwork.feedback_alignment(layers, net_params)
     elif model_type == 'backprop':
@@ -25,6 +25,8 @@ def load_network(model_type, layers, net_params):
         backprop_net = FullyConnectedNetwork.gen_pseudo_backprop(layers, net_params) 
     elif model_type == 'dyn_pseudo':
         backprop_net = FullyConnectedNetwork.dyn_pseudo_backprop(layers, net_params) 
+    elif model_type == 'DRL':
+        backprop_net = FullyConnectedNetwork.DRL(layers, net_params) 
     else:
         raise ValueError(f'{model_type} is not a valid option. Implemented \
             options are in {possible_networks}')

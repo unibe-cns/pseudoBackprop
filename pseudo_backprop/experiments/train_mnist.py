@@ -60,7 +60,7 @@ def main(params, per_images, num_workers):
     weight_rescale = params["weight_rescale"] if "weight_rescale" in params else 1
     back_weight_rescale = params["backwards_weight_rescale"] if "backwards_weight_rescale" in params else 1
 
-    if model_type == 'dyn_pseudo':
+    if model_type in ['dyn_pseudo', 'DRL']:
 
         # bw learning rate can be given as an array or single value
         if not isinstance(params["backwards_learning_rate"], list):
@@ -146,7 +146,7 @@ def main(params, per_images, num_workers):
         logging.info(f'Backwards weights are rescaled by {back_weight_rescale}') if back_weight_rescale != 1 else True
 
     logging.info(f'Learning rate: {learning_rate}')
-    if model_type == 'dyn_pseudo':
+    if model_type in ['dyn_pseudo', 'DRL']:
         logging.info(f'Backwards learning rate: {backwards_learning_rate}')
         logging.info(f'Regularizer: {regularizer_array}')
         if not regularizer_fixed:
@@ -210,7 +210,7 @@ def main(params, per_images, num_workers):
     logging.info('The number of classes is %i', nb_classes)
 
     # for gen_pseudo and dyn_pseudo, we init a second dataloader
-    if model_type == "gen_pseudo" or 'dyn_pseudo':
+    if model_type in ["gen_pseudo", 'dyn_pseudo', 'DRL' ]:
         if "noise" in params:
             noise = params['noise']
             logging.info(f'Adding noise N ({noise[0]},{noise[1]}) to samples for gen-pseudo.')
@@ -221,8 +221,9 @@ def main(params, per_images, num_workers):
         else:
             bool_covmat = False
 
-        if bool_covmat: logging.info(f'Using covariance matrix for gen-pseudo.')
-        else: logging.info(f'Using <rr^t> for gen-pseudo.')
+        if model_type == 'gen_pseudo':
+            if bool_covmat: logging.info(f'Using covariance matrix for gen-pseudo.')
+            else: logging.info(f'Using <rr^t> for gen-pseudo.')
 
         # (gen pseudo needs data to calc ds-pinv of W)
         if model_type == "gen_pseudo":
@@ -235,6 +236,18 @@ def main(params, per_images, num_workers):
                 batch_size=params["gen_samples"],
                 sampler=rand_sampler)
             genpseudo_iterator = iter(genpseudo_samp)
+
+        # (DRL needs data in shape with batch size 1)
+        if model_type == "DRL":
+            DRL_sampler = torch.utils.data.RandomSampler(
+                trainset,
+                num_samples=len(trainset),
+                replacement=True)
+            DRL_samp = torch.utils.data.DataLoader(
+                trainset,
+                batch_size=1,
+                sampler=DRL_sampler)
+
         # (dyn pseudo needs all data to calculate mismatch energy)
         if not regularizer_fixed and model_type == "dyn_pseudo":
             data_samp = torch.utils.data.DataLoader(
@@ -320,7 +333,7 @@ def main(params, per_images, num_workers):
         logging.info(f'• Working on epoch {epoch}')
         for index, data in enumerate(trainloader, 0):
             # redo the pseudo-inverse if applicable
-            if model_type in ["pseudo_backprop", "gen_pseudo"]:
+            if model_type in ["pseudo_backprop", "gen_pseudo", "DRL"]:
                 if counter % params["pinverse_recalc"] == 0:
                     if model_type == 'pseudo_backprop':
                         with torch.no_grad():
@@ -337,6 +350,11 @@ def main(params, per_images, num_workers):
                         with torch.no_grad():
                             backprop_net.redo_backward_weights(
                                 dataset=sub_data.float(), noise=noise, covmat=bool_covmat)
+                    if model_type == 'DRL':
+                        # use trainset to learn backwards weights
+                        with torch.no_grad():
+                            backprop_net.redo_backward_weights(
+                                dataset=DRL_samp, noise=noise, bw_lr=backwards_learning_rate, regularizer_array=regularizer_array)
                 counter += 1
 
             # get the inputs; data is a list of [inputs, labels]

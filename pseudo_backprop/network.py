@@ -120,6 +120,15 @@ class FullyConnectedNetwork(torch.nn.Module):
         return cls(layers, PseudoBackpropModule, net_params, mode='gen_pseudo')
 
     @classmethod
+    def DRL(cls, layers, net_params):
+        """
+            Delegating constructor for the difference reconstruction loss case
+        """
+        logging.info(
+            "Network with difference reconstruction loss is constructed.")
+        return cls(layers, PseudoBackpropModule, net_params, mode='DRL')
+
+    @classmethod
     def dyn_pseudo_backprop(cls, layers, net_params):
         """
             Delegating constructor for the dynamical pseudo-backprop case
@@ -144,7 +153,7 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         return self.operations(inputs)
 
-    def forward_to_hidden(self, inputs, layer):
+    def forward_to_hidden(self, inputs, layer, layer_in=0):
         """
         Make a forward pass on the inputs to the layer-th
         evaluation
@@ -153,22 +162,23 @@ class FullyConnectedNetwork(torch.nn.Module):
             inputs (tensor): tensor of inputs
             layer (int): layer number, if layer==0 then the
                          input is returned
+            layer_int (int): layer index of input
 
         Returns:
             tensor: Activities in the layer-th layer
         """
 
-        if layer == 0:
+        if layer == layer_in:
             return inputs
 
         # each layer is a combination of a matrix vector multiplication
         # and a non-linearity
-        for index in range(2 * layer):
+        for index in range(2 * (layer-layer_in)):
             inputs = self.operations_list[index](inputs)
 
         return inputs
 
-    def redo_backward_weights(self, dataset=None, noise=None, covmat=False):
+    def redo_backward_weights(self, dataset=None, noise=None, covmat=False, bw_lr=None, regularizer_array=None):
         """Recalculate the backward weights according to the model
            Do nothing if the layer has no fucntion for it.
 
@@ -193,6 +203,53 @@ class FullyConnectedNetwork(torch.nn.Module):
                     w_forward.detach().cpu().numpy(),
                     input_data, covmat=covmat).to(self.device)
                 synapse.set_backward(b_backward)
+
+        elif self.mode == 'DRL':
+            logging.info('Difference reconstruction loss redo was called')
+            
+            # make sampleloader into interator
+            DRL_iterator = iter(dataset)
+
+            # ### not yet implemented: until L_rec < epsilon:
+
+            # for 100/bw_lr steps
+            for steps in range(int(100/max(bw_lr))):
+                # pick a sample in sampleloader
+                try:
+                    sample, _ = DRL_iterator.next()
+                except StopIteration:
+                    DRL_iterator = iter(dataset)
+                    sample, _ = DRL_iterator.next()
+                # print(sample)
+
+                # for each layer
+                for index, synapse in enumerate(self.synapses):
+                    logging.info(f'(Re-)calculating backward weights in layer: {index}')
+
+                    # get activation in current layer and add noise
+                    corrupted_activity = self.forward_to_hidden(sample, index) + torch.normal(mean=noise[0], std=noise[1], size=list(sample.size()))
+                    print("corrupted_activity:", corrupted_activity)
+
+                    # propagate fw and save all activations along the way
+                    self.forward_to_hidden(sample, index)
+                    # propagate bw by calcualting h_rec
+                # perform GD step on rec loss 
+
+            # for index, synapse in enumerate(self.synapses):
+            #     logging.info(f'(Re-)calculating backward weights in layer: {index}')
+            #     w_forward = synapse.get_forward()
+            #     input_data = self.forward_to_hidden(dataset,
+            #                                         index)
+
+
+            #     if noise:
+            #         logging.debug(f'Before noise: {torch.linalg.norm(input_data)}')
+            #         input_data = torch.normal(mean=noise[0], std=noise[1], size=list(input_data.size()))
+            #         logging.debug(f'After noise: {torch.linalg.norm(input_data)}')
+            #     b_backward = aux.generalized_pseudo(
+            #         w_forward.detach().cpu().numpy(),
+            #         input_data, covmat=covmat).to(self.device)
+            #     synapse.set_backward(b_backward)
 
     def get_dataspec_pinverse(self, dataset=None, covmat=False):
         """Calculate the data-specific pseudoinverse matrices.
