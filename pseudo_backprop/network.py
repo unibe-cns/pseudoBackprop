@@ -153,7 +153,7 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         return self.operations(inputs)
 
-    def forward_to_hidden(self, inputs, layer, layer_in=0):
+    def forward_to_hidden(self, inputs, layer):
         """
         Make a forward pass on the inputs to the layer-th
         evaluation
@@ -162,19 +162,45 @@ class FullyConnectedNetwork(torch.nn.Module):
             inputs (tensor): tensor of inputs
             layer (int): layer number, if layer==0 then the
                          input is returned
-            layer_int (int): layer index of input
 
         Returns:
             tensor: Activities in the layer-th layer
         """
 
-        if layer == layer_in:
+        if layer == 0:
             return inputs
 
         # each layer is a combination of a matrix vector multiplication
         # and a non-linearity
-        for index in range(2 * (layer-layer_in)):
+        for index in range(2 * layer):
             inputs = self.operations_list[index](inputs)
+
+        return inputs
+
+    def forward_to_output(self, inputs, layer_in, layer_out):
+        """
+        Make a forward pass of the input/hidden layer activation
+        to the output layer
+
+        Args:
+            inputs (tensor): tensor of inputs
+            layer_in (int): layer index of input
+            layer_out (int): layer index of output
+
+        Returns:
+            tensor: Activities in the layer-th layer
+        """
+
+        if layer_in == layer_out:
+            return inputs
+
+        # each layer is a combination of a matrix vector multiplication
+        # and a non-linearity
+        print(inputs.size())
+        for index in range(2 * (layer_out -1 - layer_in)):
+            print(index + 2*layer_in)
+            inputs = self.operations_list[index + 2*layer_in](inputs)
+        inputs = self.operations_list[-1](inputs)
 
         return inputs
 
@@ -209,6 +235,7 @@ class FullyConnectedNetwork(torch.nn.Module):
             
             # make sampleloader into interator
             DRL_iterator = iter(dataset)
+            num_layers = len(self.layers)
 
             # ### not yet implemented: until L_rec < epsilon:
 
@@ -220,6 +247,7 @@ class FullyConnectedNetwork(torch.nn.Module):
                 except StopIteration:
                     DRL_iterator = iter(dataset)
                     sample, _ = DRL_iterator.next()
+                sample = sample.float()
                 # print(sample)
 
                 # for each layer
@@ -227,11 +255,23 @@ class FullyConnectedNetwork(torch.nn.Module):
                     logging.info(f'(Re-)calculating backward weights in layer: {index}')
 
                     # get activation in current layer and add noise
-                    corrupted_activity = self.forward_to_hidden(sample, index) + torch.normal(mean=noise[0], std=noise[1], size=list(sample.size()))
-                    print("corrupted_activity:", corrupted_activity)
+                    corrupted_activity = []
+                    corrupted_activity.append(
+                        self.forward_to_hidden(sample, index)
+                        + torch.normal(mean=noise[0], std=noise[1], size=list(sample.size()))
+                        )
+                    print("corrupted_activity:", corrupted_activity[0])
 
                     # propagate fw and save all activations along the way
-                    self.forward_to_hidden(sample, index)
+                    for act_index in range(index, num_layers-1):
+                        print(act_index, num_layers-1)
+                        corrupted_activity.append(self.forward_to_output(corrupted_activity[0], act_index, num_layers-1))
+                        print("corrupted_activity:", corrupted_activity[-1])
+                    
+
+                    
+                    # self.forward_to_hidden(sample, num_layers, index)
+                    # print("corrupted_activity:", corrupted_activity)
                     # propagate bw by calcualting h_rec
                 # perform GD step on rec loss 
 
