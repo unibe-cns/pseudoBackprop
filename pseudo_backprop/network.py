@@ -223,7 +223,7 @@ class FullyConnectedNetwork(torch.nn.Module):
                                                     index)
                 if noise:
                     logging.debug(f'Before noise: {torch.linalg.norm(input_data)}')
-                    input_data = torch.normal(mean=noise[0], std=noise[1], size=list(input_data.size()))
+                    input_data += torch.normal(mean=noise[0], std=noise[1], size=list(input_data.size()))
                     logging.debug(f'After noise: {torch.linalg.norm(input_data)}')
                 b_backward = aux.generalized_pseudo(
                     w_forward.detach().cpu().numpy(),
